@@ -1,0 +1,185 @@
+---
+title: "mslp"
+output:
+  rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{mslp}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo = FALSE, message = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  eval     = FALSE
+)
+```
+
+mslp provides a comprehensive pipelines to predict potential synthetic lethal partners (SLPs) for human tumour mutations.
+The underlying assumpations are 1) SLPs are up-regulated to compensate the loss of function of mutations,
+and 2) SLPs correlates with mutations in the wide type patients.
+
+Primary SLPs are first predicted by the compensationModule and correlationModule. Together with the genetic screen data,
+consensus SLPs are identified as recurrent primary SLPs for the same muations in different cell lines.
+Following parts of the tutorial show a complete run from data preparation to consensus SLPs.
+
+## Data preprocessing
+In the tutorial we will use files from PanCancer Atlas, provided by [cBioPortal](https://www.cbioportal.org/) [1].
+
+- mutation profiles, "data_mutations_extended.txt".
+- CNA profiles, "data_CNA.txt".
+- gene exprssion, "data_RNA_Seq_v2_expression_median.txt".
+- z-score data, "data_RNA_Seq_v2_mRNA_median_Zscores.txt".
+
+
+It is possible to use customized datasets, simply following the
+format and column names of above files, e.g., "data_mutations_extended.txt" is a gene by sample matrix, with "Hugo_Symbol", "Entrez_Gene_Id" as
+the first two columns. Three columns are mandatory in mutation profiles: "Tumor_Sample_Barcode", "Gene" and "Variant_Classification",
+while "Gene" contains the Ensembl gene ids.
+
+```{r}
+#- Preprocessing the data.
+library(mslp)
+
+#- Path to input files.
+P_mut  <- "data_mutations_extended.txt"
+P_cna  <- "data_CNA.txt"
+P_expr <- "data_RNA_Seq_v2_expression_median.txt"
+P_z    <- "data_RNA_Seq_v2_mRNA_median_Zscores.txt"
+
+res <- pp_tcga(P_mut, P_cna, P_expr, P_z)
+
+saveRDS(res$mut_data, "mut_data.rds")
+saveRDS(res$expr_data, "expr_data.rds")
+saveRDS(res$zscore_data, "zscore_data.rds")
+```
+
+## Call SLPs from compensationModule
+We use `comp_slp` to predict SLPs compensated for the loss of function of mutations. Briefly, it identifies highly expressed genes in patients for mutations via the rank products algorithm [2], while co-occured mutations are removed beforehand.
+
+```{r}
+zscore_data <- readRDS("zscore_data.rds")
+mutcna_data <- readRDS("mut_data.rds")
+
+res <- comp_slp(zscore_data, mutcna_data)
+saveRDS(res, file = "compSLP_res.rds")
+```
+
+## Call SLPs from correlationModule
+We use `corr_slp` to predict SLPs correlated with mutations in wide type patients. Internally, GENIE3, a random forest based methods, is used to select potential SLPs [3].
+
+```{r}
+expr_data <- readRDS("expr_data.rds")
+mut_data  <- readRDS("mut_data.rds")
+
+res <- corr_slp(expr_data, mut_data)
+
+#- Filter the res by importance threshold
+im_thresh <- 0.0016
+res_filtered <- res[im >= im_thresh]
+```
+
+It is advised to compute the `im_thresh` for individual studies. We implemented an approach estimating a threshold via  `corr_slp` repetition results.
+Briefly, `corr_slp` are performed for randomly selected mutations repeatedly. For each mutation,
+SLPs with high importance are selected as "true" SLPs via the rank products algorithm.
+We then calculated the best threshold of receiver operating characteristic curve  (ROC) of each repetation,
+and take the mean value across repetition. The final threshold is the average value among mutations.
+
+```{r}
+#- Random mutations and runs
+mutgene      <- sample(intersect(mut_data$mut_entrez, rownames(expr_data)), 100)
+nperm        <- 50
+
+res          <- lapply(seq_len(nperm), function(x) corr_slp(expr_data, mut_data, mutgene = mutgene))
+im_res       <- est_im(res)
+res_filtered <- res[im >= mean(im_res$roc_thresh]
+saveRDS(res_filtered, "corrSLP_filtered.rds")
+```
+
+## Call consensus SLPs
+We need to prepare mutation and genetic screen data of cancer cell lines.
+Cancer Cell Line Encyclopedia (CCLE) is a great place to find mutation data [4]; and genetic screen results could
+be found in datatsets such as Project Drive [5] and DepMap [6].
+Screen data of two breast cancer cell lines from Project Drive is included in the package as an example (a data.table).
+
+For example, following codes show how to extract mutation data from CCLE.
+```{r}
+library(readxl)
+library(magrittr)
+library(data.table)
+
+#- nature11003-s3.xls is available in the supplmentary data of CCLE publication.
+ccle <- readxl::read_excel("nature11003-s3.xls", sheet = "Table S1", skip = 2) %>%
+  as.data.frame %>%
+  set_names(gsub(" ", "_", names(.))) %>%
+  as.data.table %>%
+  .[, CCLE_name := toupper(CCLE_name)] %>%
+  unique
+
+#- Keep the Nonsynonymous Mutations, CCLE_DepMap_18Q1_maf_20180207.txt could be downloaded in the CCLE website.
+#- Only need the columns of cell_line and mut_entrez.
+mut_type  <- c("Missense_Mutation", "Nonsense_Mutation", "Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Nonstop_Mutation")
+ccle_mut  <- fread("CCLE_DepMap_18Q1_maf_20180207.txt") %>%
+  .[Variant_Classification %in% mut_type] %>%
+  .[, Tumor_Sample_Barcode := toupper(Tumor_Sample_Barcode)] %>%
+  .[, Entrez_Gene_Id := as.character(Entrez_Gene_Id)] %>%
+  .[, .(Tumor_Sample_Barcode, Entrez_Gene_Id)] %>%
+  unique %>%
+  setnames(c("cell_line", "mut_entrez"))
+
+#- Select brca cell lines
+brca_ccle_mut <- ccle_mut[cell_line %in% unique(ccle[CCLE_tumor_type == "breast"])]
+```
+
+<br />
+
+Now we are ready to find consensus SLPs, which are 1) hits in genetic screens, 2) consistent for same mutations among cell lines.
+`scr_slp` and `cons_slp` are used for these two steps, respectively. By default, test on Cohen's kappa coefficient is used to access the consistency.
+
+```{r}
+#- Merge data.
+comp_res   <- readRDS("compSLP_res.rds")
+corr_res   <- readRDS("corrSLP_filtered.rds")
+merged_res <- merge_slp(comp_res, corr_res)
+
+data(brca_screen)
+brca_screen
+#       screen_entrez screen_symbol     cell_line
+#    1:          8086          AAAS  JIMT1_BREAST
+#    2:            15         AANAT HS578T_BREAST
+#    3:        154664        ABCA13 HS578T_BREAST
+#    4:         10347         ABCA7 HS578T_BREAST
+#    5:            22         ABCB7 HS578T_BREAST
+#   ---
+# 1868:          9406        ZRANB2  JIMT1_BREAST
+# 1869:         80345       ZSCAN16 HS578T_BREAST
+# 1870:         11130         ZWINT HS578T_BREAST
+# 1871:         11130         ZWINT  JIMT1_BREAST
+# 1872:         26009          ZZZ3  JIMT1_BREAST
+
+#- Hits that are SLPs as well.
+allcell <- intersect(brca_ccle_mut$cell_line, brca_screen$cell_line)
+scr_res <- lapply(allcell, scr_slp, brca_screen, cell_mut, merged_res)
+scr_res[lengths(scr_res) == 0] <- NULL
+scr_res <- rbindlist(scr_res)
+
+#- consensus SLPs by kappa test.
+k_res <- cons_slp(scr_res, tumour_slp = merged_res, method = "Kappa_test")
+
+#- Filter results, e.g., by kappa_value and padj.
+k_res_f <- k_res[kappa_value >= 0.6 & padj <= 0.1]
+```
+
+## Reference
+[1]: Cerami, E. et al. The cBio Cancer Genomics Portal: An Open Platform for Exploring Multidimensional Cancer Genomics Data. Cancer Discovery 2, 401–404 (2012).
+
+[2]: Breitling, R., Armengaud, P., Amtmann, A. & Herzyk, P. Rank products: a simple, yet powerful, new method to detect differentially regulated genes in replicated microarray experiments. FEBS Letters 573, 83–92 (2004).
+
+[3]: Huynh-Thu, V. A., Irrthum, A., Wehenkel, L. & Geurts, P. Inferring Regulatory Networks from Expression Data Using Tree-Based Methods. PLoS ONE 5, e12776 (2010).
+
+[4]: Barretina, J. et al. The Cancer Cell Line Encyclopedia enables predictive modelling of anticancer drug sensitivity. Nature 483, 603 (2012).
+
+[5]: McDonald, E. R. et al. Project DRIVE: A Compendium of Cancer Dependencies and Synthetic Lethal Relationships Uncovered by Large-Scale, Deep RNAi Screening. Cell 170, 577-592.e10 (2017).
+
+[6]: Tsherniak, A. et al. Defining a Cancer Dependency Map. Cell 170, 564-576.e16 (2017).
