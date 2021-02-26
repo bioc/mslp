@@ -1,5 +1,5 @@
 #' @import data.table
-#' @importFrom stats cor na.omit p.adjust sd phyper
+#' @importFrom stats cor na.omit p.adjust sd
 #' @importFrom utils combn capture.output
 #' @importFrom magrittr %>% set_rownames multiply_by extract extract2
 #' @importFrom foreach foreach %dopar%

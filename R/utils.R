@@ -28,7 +28,7 @@ pp_tcga <- function(p_mut,
     freq_thresh     = 0.02,
     expr_thresh     = 10,
     hypermut_thresh = 300) {
-  ensembl_id <- Gene <- gene_id <- Tumor_Sample_Barcode <- Variant_Classification <- Entrez_Gene_Id <- V1 <- patientid <- mut_entrez <- NULL
+  ensembl_id <- Gene <- Variant_Classification <- Entrez_Gene_Id <- V1 <- patientid <- mut_entrez <- NULL
 
   message("(II) Pre-process mutation data.")
   mut_type <- c("Missense_Mutation", "Nonsense_Mutation", "Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Nonstop_Mutation")
@@ -154,7 +154,7 @@ merge_slp <- function(comp_data, corr_data) {
 #' @return A data.table with mut_entrez (mutation entrez_id) and roc_thresh (estimated im threshold).
 #' @export
 est_im <- function(permu_data, fdr_thresh = 0.001, ncore = 2) {
-  i <- permu_id <- gene <- im <- slp_entrez <- fdr <- mut_entrez <- NULL
+  permu_id <- gene <- im <- slp_entrez <- fdr <- mut_entrez <- NULL
 
   mutgene <- sapply(permu_data, function(x) x$mut_entrez %>% unique) %>% c %>% unique
 
