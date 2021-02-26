@@ -22,7 +22,9 @@ Imports:
     org.Hs.eg.db,
     pROC,
     randomForest,
-    RankProd
+    RankProd,
+    stats,
+    utils
 Suggests:
     knitr,
     rmarkdown,
