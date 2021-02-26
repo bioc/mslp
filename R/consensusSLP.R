@@ -94,28 +94,26 @@ cons_slp <- function(screen_slp, tumour_slp, method = c("Kappa_test", "Hypergeom
         res        <- lapply(comb_cell, fn_sub_cons_slp, z = i, screen_slp = sub_screen, tumour_slp = tumour_slp, method = method)
 
         res[lengths(res) == 0] <- NULL
+        if (length(res) > 0) res <- rbindlist(res)
 
-        if (length(res) > 0) {
-          res <- rbindlist(res) %>%
-            na.omit %>%
-            .[, padj := p.adjust(pvalue, method = "BH")]
-
-          #- Expand the cons_slp_entrez to each SLP per row.
-          bycol <- setdiff(names(res), "cons_slp_entrez")
-          res   <- res[, .(cons_slp_entrez = tstrsplit(cons_slp_entrez, "_") %>% unlist), by = bycol] %>%
-            merge(unique(sub_screen[, c("screen_entrez", "screen_symbol")]), by.x = "cons_slp_entrez", by.y = "screen_entrez") %>%
-            setnames("screen_symbol", "cons_slp_symbol") %>%
-            setcolorder(c("mut_entrez", "mut_symbol", "cons_slp_entrez", "cons_slp_symbol"))
-
-          return(res)
-        }
+        return(res)
       }
     )
 
     allres[lengths(allres) == 0] <- NULL
 
     if (length(allres) > 0) {
-      allres <- rbindlist(allres)
+      allres <- rbindlist(allres) %>%
+        na.omit %>%
+        .[, padj := p.adjust(pvalue, method = "BH")]
+
+      #- Expand the cons_slp_entrez to each SLP per row.
+      bycol <- setdiff(names(allres), "cons_slp_entrez")
+      allres   <- allres[, .(cons_slp_entrez = unlist(tstrsplit(cons_slp_entrez, "_"))), by = bycol] %>%
+        merge(unique(screen_lite[, c("screen_entrez", "screen_symbol")]), by.x = "cons_slp_entrez", by.y = "screen_entrez") %>%
+        # merge(unique(sub_screen[, c("screen_entrez", "screen_symbol")]), by.x = "cons_slp_entrez", by.y = "screen_entrez") %>%
+        setnames("screen_symbol", "cons_slp_symbol") %>%
+        setcolorder(c("mut_entrez", "mut_symbol", "cons_slp_entrez", "cons_slp_symbol"))
     } else {
       message("(II) No consensus SLPs.")
     }
@@ -132,7 +130,7 @@ fn_sub_cons_slp <- function(paircell, z, screen_slp, tumour_slp, method) {
   y_slp <- screen_slp[cell_line == y, screen_entrez]
   c_slp <- intersect(x_slp, y_slp)
 
-  if (length(c_slp) > 0 ) {
+  if (length(c_slp) > 0) {
     t_slp <- tumour_slp[mut_entrez == z, slp_entrez]
     if (method == "Kappa_test") {
       mtx   <- fn_confusion_mtx(x_slp, y_slp, t_slp)
