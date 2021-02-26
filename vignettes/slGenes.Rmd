@@ -135,7 +135,7 @@ brca_ccle_mut <- ccle_mut[cell_line %in% unique(ccle[CCLE_tumor_type == "breast"
 <br />
 
 Now we are ready to find consensus SLPs, which are 1) hits in genetic screens, 2) consistent for same mutations among cell lines.
-`scr_slp` and `cons_slp` are used for these two steps, respectively. By default, test on Cohen's kappa coefficient is used to access the consistency.
+`scr_slp` and `cons_slp` are used for these two steps, respectively.
 
 ```{r}
 #- Merge data.
@@ -165,7 +165,7 @@ scr_res[lengths(scr_res) == 0] <- NULL
 scr_res <- rbindlist(scr_res)
 
 #- consensus SLPs by kappa test.
-k_res <- cons_slp(scr_res, tumour_slp = merged_res, method = "Kappa_test")
+k_res <- cons_slp(scr_res, tumour_slp = merged_res)
 
 #- Filter results, e.g., by kappa_value and padj.
 k_res_f <- k_res[kappa_value >= 0.6 & padj <= 0.1]
