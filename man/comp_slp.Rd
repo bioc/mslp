@@ -41,5 +41,5 @@ A data.table with predicted SLPs.
 }
 }
 \description{
-Identify SLPs compensating for the loss of function of mutations. The up-regulated SLPs are selected via the rank prodcuts algorithm.
+Identify SLPs compensating for the loss of function of mutations. The up-regulated SLPs are selected via the rank prodcuts algorithm, with option calculateProduct = FALSE for a robust results and capacity on large datasets.
 }

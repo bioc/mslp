@@ -1,6 +1,6 @@
 #' Identify SLPs via compensation
 #'
-#' Identify SLPs compensating for the loss of function of mutations. The up-regulated SLPs are selected via the rank prodcuts algorithm.
+#' Identify SLPs compensating for the loss of function of mutations. The up-regulated SLPs are selected via the rank prodcuts algorithm, with option calculateProduct = FALSE for a robust results and capacity on large datasets.
 #'
 #' @param zscore_data a matrix (genes by patients) reflecting gene expression related to wide type samples. For example, generated from \code{\link{pp_tcga}}.
 #' @param mut_data a data.table with columns "patientid" and "mut_entrez".
