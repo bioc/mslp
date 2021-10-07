@@ -39,14 +39,22 @@ comp_slp <- function(zscore_data,
 
   message("(==) Number of mutations: ", length(mutgene), ".")
 
-  doFuture::registerDoFuture()
-  future::plan(future::multisession, workers = ncore)
+  if(ncore > 1) {
+    doFuture::registerDoFuture()
+    future::plan(future::multisession, workers = ncore)
 
-  suppressPackageStartupMessages(
-    res <- foreach (i = mutgene) %dopar% {
-      fn_sub_comp_slp(i, zscore_data, mut_lite, positive_perc = positive_perc, p_thresh = p_thresh, ...)
-    }
-  )
+    suppressPackageStartupMessages(
+      res <- foreach (i = mutgene) %dopar% {
+        fn_sub_comp_slp(i, zscore_data, mut_lite, positive_perc = positive_perc, p_thresh = p_thresh, ...)
+      }
+    )
+  } else {
+    suppressPackageStartupMessages(
+      res <- foreach (i = mutgene) %do% {
+        fn_sub_comp_slp(i, zscore_data, mut_lite, positive_perc = positive_perc, p_thresh = p_thresh, ...)
+      }
+    )
+  }
 
   res[lengths(res) == 0] <- NULL
 
@@ -81,13 +89,14 @@ fn_sub_comp_slp <- function(gene,
   if (length(mut_patient) >= 2) {
     comut <- mut_data[patientid %in% mut_patient, unique(mut_entrez)]
 
-    #- Remove co-mutated genes.
+    #- Remove co-mutated genes, and keep a clean data.
     mtx <- zscore_data[!(rownames(zscore_data) %in% comut), colnames(zscore_data) %in% mut_patient] %>%
+      na.omit %>%
       .[rowSums(. > 0) >= (positive_perc * ncol(.)), ]
 
     if (nrow(mtx) > 0) {
       wd_mtx <- zscore_data[, !(colnames(zscore_data) %in% mut_patient)] %>% extract(rownames(mtx), )
-      mtx    <- mtx[rowMeans(mtx) > rowMeans(wd_mtx), ]
+      mtx    <- mtx[rowMeans(mtx) > rowMeans(wd_mtx, na.rm = TRUE), ]
 
       invisible(capture.output(res <- RankProd::RankProducts(mtx, cl = rep(1, ncol(mtx)), logged = TRUE, gene.names = rownames(mtx), calculateProduct = FALSE, ...)))
       compres <- data.table(mut_entrez = gene, slp_entrez = rownames(res$pval), pvalue = res$pval[, 2], fdr = p.adjust(res$pval[, 2], method = "BH")) %>%

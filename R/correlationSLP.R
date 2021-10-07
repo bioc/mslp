@@ -33,14 +33,22 @@ corr_slp <- function(expr_data, mut_data, ncore = 2, mutgene = NULL, im_thresh =
 
   message("(II) Number of mutations: ", length(mutgene), ".")
 
-  doFuture::registerDoFuture()
-  future::plan(future::multisession, workers = ncore)
+  if (ncore > 1) {
+    doFuture::registerDoFuture()
+    future::plan(future::multisession, workers = ncore)
 
-  suppressPackageStartupMessages(
-    genie3_res <- foreach(i = mutgene) %dorng% {
-      fn_sub_corr_slp(i, expr_data, mut_data, im_thresh, topgene, ...)
-    }
-  )
+    suppressPackageStartupMessages(
+      genie3_res <- foreach(i = mutgene) %dorng% {
+        fn_sub_corr_slp(i, expr_data, mut_data, im_thresh, topgene, ...)
+      }
+    )
+  } else {
+    suppressPackageStartupMessages(
+      genie3_res <- foreach(i = mutgene) %do% {
+        fn_sub_corr_slp(i, expr_data, mut_data, im_thresh, topgene, ...)
+      }
+    )
+  }
 
   genie3_res[lengths(genie3_res) == 0] <- NULL
 

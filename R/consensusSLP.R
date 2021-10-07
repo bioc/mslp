@@ -83,21 +83,36 @@ cons_slp <- function(screen_slp, tumour_slp, ncore = 2) {
     extract2("mut_entrez")
 
   if (length(rec_mut) > 0) {
-    doFuture::registerDoFuture()
-    future::plan(future::multisession, workers = ncore)
+    if (ncore > 1) {
+      doFuture::registerDoFuture()
+      future::plan(future::multisession, workers = ncore)
 
-    suppressPackageStartupMessages(
-      allres <- foreach(i = rec_mut) %dopar% {
-        sub_screen <- screen_lite[mut_entrez == i]
-        comb_cell  <- combn(unique(sub_screen$cell_line), 2, simplify = FALSE)
-        res        <- lapply(comb_cell, fn_sub_cons_slp, z = i, screen_slp = sub_screen, tumour_slp = tumour_slp)
+      suppressPackageStartupMessages(
+        allres <- foreach(i = rec_mut) %dopar% {
+          sub_screen <- screen_lite[mut_entrez == i]
+          comb_cell  <- combn(unique(sub_screen$cell_line), 2, simplify = FALSE)
+          res        <- lapply(comb_cell, fn_sub_cons_slp, z = i, screen_slp = sub_screen, tumour_slp = tumour_slp)
 
-        res[lengths(res) == 0] <- NULL
-        if (length(res) > 0) res <- rbindlist(res)
+          res[lengths(res) == 0] <- NULL
+          if (length(res) > 0) res <- rbindlist(res)
 
-        return(res)
-      }
-    )
+          return(res)
+        }
+      )
+    } else {
+      suppressPackageStartupMessages(
+        allres <- foreach(i = rec_mut) %do% {
+          sub_screen <- screen_lite[mut_entrez == i]
+          comb_cell  <- combn(unique(sub_screen$cell_line), 2, simplify = FALSE)
+          res        <- lapply(comb_cell, fn_sub_cons_slp, z = i, screen_slp = sub_screen, tumour_slp = tumour_slp)
+
+          res[lengths(res) == 0] <- NULL
+          if (length(res) > 0) res <- rbindlist(res)
+
+          return(res)
+        }
+      )
+    }
 
     allres[lengths(allres) == 0] <- NULL
 
