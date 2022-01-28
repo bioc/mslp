@@ -1,5 +1,6 @@
 # History files
 .Rhistory
+R/.Rhistory
 .Rapp.history
 
 # Session Data files
@@ -19,11 +20,13 @@
 
 # RStudio files
 .Rproj.user/
+mslp.Rproj
 
 # produced vignettes
 vignettes/*.html
 vignettes/*.pdf
 vignettes/*.R
+vignettes/.Rhistory
 
 # OAuth2 token, see https://github.com/hadley/httr/releases/tag/v0.3
 .httr-oauth
