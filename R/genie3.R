@@ -3,17 +3,23 @@
 #' Calculate the weight matrix between genes via randomForest, modified from original codes by Huynh-Thu, V.A.
 #'
 #' @param expr.matrix  exrepssion matrix (genes by samples).
+#' @param ngene an integer, only up to ngene (included) targets (responsible variables).
 #' @param K choice of number of input genes randomly, must be one of "sqrt", "all", an integar.
 #' @param nb.trees number of trees in ensemble for each target gene (default 1000).
 #' @param input.idx subset of genes used as input genes (default all genes). A vector of indices or gene names is accepted.
 #' @param importance.measure type of variable importance measure, "IncNodePurity" or "\%IncMSE".
 #' @param seed random number generator seed for replication of analyses.
 #' @param trace index of currently computed gene is reported (default FALSE).
-#' @param ngene an integer, only up to ngene (included) targets (responsible variables).
 #' @param ... parameter to randomForest.
 #' @return A weighted adjacency matrix of inferred network, element w_ij (row i, column j) gives the importance of the link from regulatory gene i to target gene i.
 #' @references
 #'   Huynh-Thu, V.A., Irrthum, A., Wehenkel, L., and Geurts, P. (2010). Inferring Regulatory Networks from Expression Data Using Tree-Based Methods. PLoS ONE 5, e12776.
+#' @examples
+#' \dontrun{
+#' mtx <- matrix(sample(1000, 100), nrow = 5)
+#' mtx <- rbind(mtx[1, ] * 2 + rnorm(20), mtx)
+#' res <- genie3(mtx, K = 1, nb.trees = 100)
+#' }
 #' @export
 genie3 <- function(expr.matrix,
     ngene              = NULL,
@@ -21,10 +27,10 @@ genie3 <- function(expr.matrix,
     nb.trees           = 1000,
     input.idx          = NULL,
     importance.measure = "IncNodePurity",
-    seed               = NULL,
+    # seed               = NULL,
     trace              = FALSE, ...) {
   # set random number generator seed if seed is given
-  if (!is.null(seed)) set.seed(seed)
+  # if (!is.null(seed)) set.seed(seed)
 
   # to be nice, report when parameter importance.measure is not correctly spelled
   if (importance.measure != "IncNodePurity" && importance.measure != "%IncMSE") {
@@ -66,7 +72,7 @@ genie3 <- function(expr.matrix,
     }
   }
 
-  if (class(K) == "numeric") {
+  if (is(k, "numeric")) {
     mtry <- K
   } else if (K == "sqrt") {
     mtry <- round(sqrt(num.input.genes))
@@ -121,7 +127,7 @@ getlink <- function(weight.matrix, report.max = NULL) {
     .[im > 0] %>%
     .[order(-im)]
 
-  if (!is.null(report.max) && nrow(res) > report.max) res <- res[1:report.max]
+  if (!is.null(report.max) && nrow(res) > report.max) res <- res[seq_len(report.max)]
 
   return(res)
 }
