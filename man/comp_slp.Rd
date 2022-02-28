@@ -43,3 +43,11 @@ A data.table with predicted SLPs.
 \description{
 Identify SLPs compensating for the loss of function of mutations. The up-regulated SLPs are selected via the rank prodcuts algorithm, with option calculateProduct = FALSE for a robust results and capacity on large datasets.
 }
+\examples{
+\dontrun{
+#- Toy examples, see vignette for more.
+data("example_z")
+data("comp_mut")
+res <- comp_slp(example_z, comp_mut, ncore = 2)
+}
+}

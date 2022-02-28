@@ -93,7 +93,7 @@ nperm        <- 50
 
 res          <- lapply(seq_len(nperm), function(x) corr_slp(expr_data, mut_data, mutgene = mutgene))
 im_res       <- est_im(res)
-res_filtered <- res[im >= mean(im_res$roc_thresh]
+res_filtered <- res[im >= mean(im_res$roc_thresh)]
 saveRDS(res_filtered, "corrSLP_filtered.rds")
 ```
 
@@ -170,6 +170,8 @@ k_res <- cons_slp(scr_res, tumour_slp = merged_res)
 #- Filter results, e.g., by kappa_value and padj.
 k_res_f <- k_res[kappa_value >= 0.6 & padj <= 0.1]
 consensus_res <- unique(k_res_f[, .(mut_entrez, mut_symbol, cons_slp_entrez, cons_slp_symbol)])
+
+sessionInfo()
 ```
 
 ## Reference

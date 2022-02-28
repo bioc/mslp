@@ -34,3 +34,16 @@ A data.table.
 Identify whether screen hits are SLPs of mutations deteced in both patients and cell lines, based on
 predicted SLPs in \code{\link{corr_slp}} and \code{\link{comp_slp}}.
 }
+\examples{
+\dontrun{
+#- Toy examples, see vignette for more.
+data("example_expr")
+data("corr_mut")
+data("brca_screen")
+
+res         <- corr_slp(example_expr, corr_mut, ncore = 2)
+brca_screen <- unique(brca_screen[RSA_score <= -2][, -"RSA_score"])
+allcell     <- intersect(corr_mut$cell_line, brca_screen$cell_line)
+scr_res     <- lapply(allcell, scr_slp, brca_screen, corr_mut, res)
+}
+}

@@ -11,7 +11,6 @@ genie3(
   nb.trees = 1000,
   input.idx = NULL,
   importance.measure = "IncNodePurity",
-  seed = NULL,
   trace = FALSE,
   ...
 )
@@ -29,8 +28,6 @@ genie3(
 
 \item{importance.measure}{type of variable importance measure, "IncNodePurity" or "\%IncMSE".}
 
-\item{seed}{random number generator seed for replication of analyses.}
-
 \item{trace}{index of currently computed gene is reported (default FALSE).}
 
 \item{...}{parameter to randomForest.}
@@ -40,6 +37,13 @@ A weighted adjacency matrix of inferred network, element w_ij (row i, column j) 
 }
 \description{
 Calculate the weight matrix between genes via randomForest, modified from original codes by Huynh-Thu, V.A.
+}
+\examples{
+\dontrun{
+mtx <- matrix(sample(1000, 100), nrow = 5)
+mtx <- rbind(mtx[1, ] * 2 + rnorm(20), mtx)
+res <- genie3(mtx, K = 1, nb.trees = 100)
+}
 }
 \references{
 Huynh-Thu, V.A., Irrthum, A., Wehenkel, L., and Geurts, P. (2010). Inferring Regulatory Networks from Expression Data Using Tree-Based Methods. PLoS ONE 5, e12776.

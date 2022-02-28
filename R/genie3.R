@@ -8,7 +8,6 @@
 #' @param nb.trees number of trees in ensemble for each target gene (default 1000).
 #' @param input.idx subset of genes used as input genes (default all genes). A vector of indices or gene names is accepted.
 #' @param importance.measure type of variable importance measure, "IncNodePurity" or "\%IncMSE".
-#' @param seed random number generator seed for replication of analyses.
 #' @param trace index of currently computed gene is reported (default FALSE).
 #' @param ... parameter to randomForest.
 #' @return A weighted adjacency matrix of inferred network, element w_ij (row i, column j) gives the importance of the link from regulatory gene i to target gene i.
@@ -72,7 +71,7 @@ genie3 <- function(expr.matrix,
     }
   }
 
-  if (is(k, "numeric")) {
+  if (methods::is(K, "numeric")) {
     mtry <- K
   } else if (K == "sqrt") {
     mtry <- round(sqrt(num.input.genes))

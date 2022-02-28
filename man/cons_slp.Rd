@@ -36,6 +36,12 @@ Consensus SLPs are enriched screen hits that are SLPs of same mutations in diffe
   We used either Cohen's Kappa coefficient on a confusion matrix, or Hypergeometric test, to test
   the signficance of overlapping of screen hits.
 }
+\examples{
+\dontrun{
+#- scr_res is generated from scr_slp.
+k_res <- cons_slp(scr_res, corr_slp, ncore = 2)
+}
+}
 \references{
 Landis JR, Koch GG (1977) The measurement of observer agreement for categorical data. Biomet-rics, 33: 159-174.
 }

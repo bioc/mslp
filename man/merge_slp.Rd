@@ -27,3 +27,9 @@ A data.table.
 \description{
 Merge predcted SLPs from comp_slp and corr_slp.
 }
+\examples{
+\dontrun{
+#- See comp_slp and corr_slp on how SLPs are identified.
+res <- merge_slp(comp_res, corr_res)
+}
+}

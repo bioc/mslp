@@ -42,6 +42,19 @@ It is designed to process the TCGA data provided by cBioPortal. In mutation data
   In CNA data, genes with GISTIC value equal to -2 are used. Patients with hypermutations are removed.
   Low expression genes, or genes that are not detected in any patient are filtered out.
 }
+\examples{
+\dontrun{
+#- See vignette for more details.
+P_mut  <- "data_mutations_extended.txt"
+P_cna  <- "data_CNA.txt"
+P_expr <- "data_RNA_Seq_v2_expression_median.txt"
+P_z    <- "data_RNA_Seq_v2_mRNA_median_Zscores.txt"
+res    <- pp_tcga(P_mut, P_cna, P_expr, P_z)
+saveRDS(res$mut_data, "mut_data.rds")
+saveRDS(res$expr_data, "expr_data.rds")
+saveRDS(res$zscore_data, "zscore_data.rds")
+}
+}
 \references{
 Cerami et al. The cBio Cancer Genomics Portal: An Open Platform for Exploring Multidimensional Cancer Genomics Data. Cancer Discovery. May 2012 2; 401.
   Gao et al. Integrative analysis of complex cancer genomics and clinical profiles using the cBioPortal. Sci. Signal. 6, pl1 (2013).
