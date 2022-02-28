@@ -19,6 +19,13 @@
 #'     \item{fdr}{"BH" adjusted pvalue via \code{\link[stats]{p.adjust}}.}
 #'     \item{im}{The importance value returned by \code{\link{genie3}}.}
 #' }
+#' @examples
+#' \dontrun{
+#' #- Toy examples, see vignette for more.
+#' data("example_expr")
+#' data("corr_mut")
+#' res <- corr_slp(example_expr, corr_mut, ncore = 2)
+#' }
 #' @export
 corr_slp <- function(expr_data, mut_data, ncore = 2, mutgene = NULL, im_thresh = 0.001, topgene = 2000, ...) {
   i <- symbol <- im <- mut_entrez <- NULL

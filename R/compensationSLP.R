@@ -18,6 +18,13 @@
 #'     \item{pvalue}{p_value from \code{\link[RankProd]{RankProducts}}.}
 #'     \item{fdr}{"BH" adjusted pvalue via \code{\link[stats]{p.adjust}}.}
 #' }
+#' @examples
+#' \dontrun{
+#' #- Toy examples, see vignette for more.
+#' data("example_z")
+#' data("comp_mut")
+#' res <- comp_slp(example_z, comp_mut, ncore = 2)
+#' }
 #' @export
 comp_slp <- function(zscore_data,
     mut_data,
@@ -31,10 +38,11 @@ comp_slp <- function(zscore_data,
   #- Mutations found in at least two patients.
   mut_lite <- mut_data[mut_data[, .I[.N >= 2], by = mut_entrez][, V1]]
 
+  #- Mutations are detected in the zscore data.
   if (is.null(mutgene)) {
-    mutgene <- intersect(mut_lite$mut_entrez, rownames(zscore_data))
+    mutgene <- intersect(unique(mut_lite$mut_entrez), rownames(zscore_data))
   } else {
-    mutgene <- intersect(mutgene, rownames(zscore_data))
+    mutgene <- intersect(unique(mutgene), rownames(zscore_data))
   }
 
   message("(==) Number of mutations: ", length(mutgene), ".")

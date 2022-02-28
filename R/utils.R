@@ -20,6 +20,18 @@
 #' @references
 #'   Cerami et al. The cBio Cancer Genomics Portal: An Open Platform for Exploring Multidimensional Cancer Genomics Data. Cancer Discovery. May 2012 2; 401.
 #'   Gao et al. Integrative analysis of complex cancer genomics and clinical profiles using the cBioPortal. Sci. Signal. 6, pl1 (2013).
+#' @examples
+#' \dontrun{
+#' #- See vignette for more details.
+#' P_mut  <- "data_mutations_extended.txt"
+#' P_cna  <- "data_CNA.txt"
+#' P_expr <- "data_RNA_Seq_v2_expression_median.txt"
+#' P_z    <- "data_RNA_Seq_v2_mRNA_median_Zscores.txt"
+#' res    <- pp_tcga(P_mut, P_cna, P_expr, P_z)
+#' saveRDS(res$mut_data, "mut_data.rds")
+#' saveRDS(res$expr_data, "expr_data.rds")
+#' saveRDS(res$zscore_data, "zscore_data.rds")
+#' }
 #' @export
 pp_tcga <- function(p_mut,
     p_cna,
@@ -113,6 +125,11 @@ pp_tcga <- function(p_mut,
 #'     \item{im}{The importance value returned by \code{\link{genie3}}.}
 #'     \item{dualhit}{Whether the slp is identified by \code{\link{corr_slp}} and \code{\link{comp_slp}}.}
 #' }
+#' @examples
+#' \dontrun{
+#' #- See comp_slp and corr_slp on how SLPs are identified.
+#' res <- merge_slp(comp_res, corr_res)
+#' }
 #' @export
 merge_slp <- function(comp_data, corr_data) {
   mut_entrez <- idx <- dualhit <- slp_entrez <- pvalue <- im <- NULL
@@ -152,11 +169,21 @@ merge_slp <- function(comp_data, corr_data) {
 #'   Then for each repetion, we perform receiver operating characteristic curve analysis and select an optimal threshold by "youden" approach.
 #'   The optimal thresholds are averaged to get the final threshold.
 #' @return A data.table with mut_entrez (mutation entrez_id) and roc_thresh (estimated im threshold).
+#' @examples
+#' \dontrun{
+#' #- Toy examples.
+#' data(example_expr)
+#' data(corr_mut)
+#' mutgene    <- sample(intersect(corr_mut$mut_entrez, rownames(example_expr)), 5)
+#' nperm      <- 50
+#' res        <- lapply(seq_len(nperm), function(x) corr_slp(expr_data, mut_data, ncore = 2, mutgene = mutgene))
+#' roc_thresh <- est_im(res, ncore = 2)
+#' }
 #' @export
 est_im <- function(permu_data, fdr_thresh = 0.001, ncore = 2) {
   permu_id <- gene <- im <- slp_entrez <- fdr <- mut_entrez <- NULL
 
-  mutgene <- sapply(permu_data, function(x) x$mut_entrez %>% unique) %>% c %>% unique
+  mutgene <- lapply(permu_data, function(x) x$mut_entrez) %>% unlist %>% unique
 
   doFuture::registerDoFuture()
   future::plan(future::multisession, workers = ncore)
