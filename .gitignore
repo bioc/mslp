@@ -20,7 +20,7 @@ R/.Rhistory
 
 # RStudio files
 .Rproj.user/
-mslp.Rproj
+*.Rproj
 
 # produced vignettes
 vignettes/*.html
