@@ -3,7 +3,7 @@
 \docType{data}
 \name{comp_mut}
 \alias{comp_mut}
-\title{Mutations to be use in the comp_slp}
+\title{Patients mutations to be use in the comp_slp}
 \format{
 A data.table.
 }

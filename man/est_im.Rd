@@ -26,13 +26,12 @@ We first generate a SLPs by repetition matrix from repetition GENIE3 results.
   The optimal thresholds are averaged to get the final threshold.
 }
 \examples{
-\dontrun{
 #- Toy examples.
 data(example_expr)
 data(corr_mut)
-mutgene    <- sample(intersect(corr_mut$mut_entrez, rownames(example_expr)), 5)
-nperm      <- 50
-res        <- lapply(seq_len(nperm), function(x) corr_slp(expr_data, mut_data, ncore = 2, mutgene = mutgene))
+
+mutgene    <- sample(intersect(corr_mut$mut_entrez, rownames(example_expr)), 2)
+nperm      <- 5
+res        <- lapply(seq_len(nperm), function(x) corr_slp(example_expr, corr_mut, ncore = 2, mutgene = mutgene))
 roc_thresh <- est_im(res, ncore = 2)
-}
 }

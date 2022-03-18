@@ -7,7 +7,7 @@
 getlink(weight.matrix, report.max = NULL)
 }
 \arguments{
-\item{weight.matrix}{a weighted adjacency matrix as returned by get.weight.matrix.targ.}
+\item{weight.matrix}{a weighted adjacency matrix as returned by genie3.}
 
 \item{report.max}{maximum number of links to report (default all links).}
 }
@@ -16,4 +16,12 @@ A data.table of links with columns "from.gene", "to.gene", "im".
 }
 \description{
 Take genie3 output and sort the links.
+}
+\examples{
+mtx <- matrix(sample(1000, 100), nrow = 5)
+mtx <- rbind(mtx[1, ] * 2 + rnorm(20), mtx)
+colnames(mtx) <- paste0("s_", seq_len(ncol(mtx)))
+rownames(mtx) <- paste0("g_", seq_len(nrow(mtx)))
+res <- genie3(mtx, nb.trees = 10)
+res_link <- getlink(res)
 }

@@ -18,7 +18,7 @@ genie3(
 \arguments{
 \item{expr.matrix}{exrepssion matrix (genes by samples).}
 
-\item{ngene}{an integer, only up to ngene (included) targets (responsible variables).}
+\item{ngene}{an integer, only up to the first ngene (included) targets (responsible variables).}
 
 \item{K}{choice of number of input genes randomly, must be one of "sqrt", "all", an integar.}
 
@@ -33,17 +33,18 @@ genie3(
 \item{...}{parameter to randomForest.}
 }
 \value{
-A weighted adjacency matrix of inferred network, element w_ij (row i, column j) gives the importance of the link from regulatory gene i to target gene i.
+A weighted adjacency matrix of inferred network, element w_ij (row i, column j) gives the importance of the link from regulatory gene i to target gene j.
 }
 \description{
 Calculate the weight matrix between genes via randomForest, modified from original codes by Huynh-Thu, V.A.
 }
 \examples{
-\dontrun{
+#- Toy examples.
 mtx <- matrix(sample(1000, 100), nrow = 5)
 mtx <- rbind(mtx[1, ] * 2 + rnorm(20), mtx)
-res <- genie3(mtx, K = 1, nb.trees = 100)
-}
+colnames(mtx) <- paste0("s_", seq_len(ncol(mtx)))
+rownames(mtx) <- paste0("g_", seq_len(nrow(mtx)))
+res <- genie3(mtx, nb.trees = 100)
 }
 \references{
 Huynh-Thu, V.A., Irrthum, A., Wehenkel, L., and Geurts, P. (2010). Inferring Regulatory Networks from Expression Data Using Tree-Based Methods. PLoS ONE 5, e12776.

@@ -3,7 +3,7 @@
 \docType{data}
 \name{corr_mut}
 \alias{corr_mut}
-\title{Mutations to be use in the corr_slp}
+\title{Patients mutations to be use in the corr_slp}
 \format{
 A data.table.
 }

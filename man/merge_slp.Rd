@@ -28,8 +28,13 @@ A data.table.
 Merge predcted SLPs from comp_slp and corr_slp.
 }
 \examples{
-\dontrun{
-#- See comp_slp and corr_slp on how SLPs are identified.
+data("example_z")
+data("comp_mut")
+comp_res <- comp_slp(example_z, comp_mut, ncore = 2)
+
+data("example_expr")
+data("corr_mut")
+corr_res <- corr_slp(example_expr, corr_mut, ncore = 2)
+
 res <- merge_slp(comp_res, corr_res)
-}
 }

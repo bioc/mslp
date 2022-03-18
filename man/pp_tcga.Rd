@@ -43,7 +43,7 @@ It is designed to process the TCGA data provided by cBioPortal. In mutation data
   Low expression genes, or genes that are not detected in any patient are filtered out.
 }
 \examples{
-\dontrun{
+\donttest{
 #- See vignette for more details.
 P_mut  <- "data_mutations_extended.txt"
 P_cna  <- "data_CNA.txt"

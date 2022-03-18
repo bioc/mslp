@@ -45,10 +45,8 @@ Identify SLPs of mutations based on co-expression. GENIE3 is employed to
 find genes highly correlated with mutations in wide type patients.
 }
 \examples{
-\dontrun{
 #- Toy examples, see vignette for more.
 data("example_expr")
 data("corr_mut")
 res <- corr_slp(example_expr, corr_mut, ncore = 2)
-}
 }
