@@ -5,14 +5,21 @@
 #' @format A data.table with three columns: "screen_entrez", "screen_symbol" and "cell_line".
 "brca_screen"
 
-#' Mutations to be use in the comp_slp
+#' Mutations in two brca cell lines.
+#'
+#' Mutation gene ids and related cell lines.
+#'
+#' @format A data.table.
+"brca_mut"
+
+#' Patients mutations to be use in the comp_slp
 #'
 #' Mutations and related TCGA ids.
 #'
 #' @format A data.table.
 "comp_mut"
 
-#' Mutations to be use in the corr_slp
+#' Patients mutations to be use in the corr_slp
 #'
 #' Mutations and related TCGA ids.
 #'
