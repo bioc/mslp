@@ -19,12 +19,10 @@
 #'     \item{fdr}{"BH" adjusted pvalue via \code{\link[stats]{p.adjust}}.}
 #' }
 #' @examples
-#' \dontrun{
 #' #- Toy examples, see vignette for more.
 #' data("example_z")
 #' data("comp_mut")
 #' res <- comp_slp(example_z, comp_mut, ncore = 2)
-#' }
 #' @export
 comp_slp <- function(zscore_data,
     mut_data,
@@ -47,18 +45,18 @@ comp_slp <- function(zscore_data,
 
   message("(==) Number of mutations: ", length(mutgene), ".")
 
-  if(ncore > 1) {
+  if (ncore > 1) {
     doFuture::registerDoFuture()
     future::plan(future::multisession, workers = ncore)
 
     suppressPackageStartupMessages(
-      res <- foreach (i = mutgene) %dopar% {
+      res <- foreach(i = mutgene) %dopar% {
         fn_sub_comp_slp(i, zscore_data, mut_lite, positive_perc = positive_perc, p_thresh = p_thresh, ...)
       }
     )
   } else {
     suppressPackageStartupMessages(
-      res <- foreach (i = mutgene) %do% {
+      res <- foreach(i = mutgene) %do% {
         fn_sub_comp_slp(i, zscore_data, mut_lite, positive_perc = positive_perc, p_thresh = p_thresh, ...)
       }
     )

@@ -21,17 +21,14 @@
 #'     \item{dualhit}{Whether the slp is identified by \code{\link{corr_slp}} and \code{\link{comp_slp}}.}
 #' }
 #' @examples
-#' \dontrun{
 #' #- Toy examples, see vignette for more.
 #' data("example_expr")
 #' data("corr_mut")
 #' data("brca_screen")
+#' data("brca_mut")
 #'
-#' res         <- corr_slp(example_expr, corr_mut, ncore = 2)
-#' brca_screen <- unique(brca_screen[RSA_score <= -2][, -"RSA_score"])
-#' allcell     <- intersect(corr_mut$cell_line, brca_screen$cell_line)
-#' scr_res     <- lapply(allcell, scr_slp, brca_screen, corr_mut, res)
-#' }
+#' res     <- corr_slp(example_expr, corr_mut, ncore = 2)
+#' scr_res <- lapply(intersect(brca_mut$cell_line, brca_screen$cell_line), scr_slp, brca_screen, brca_mut, res)
 #' @export
 scr_slp <- function(cell, screen_data, cell_mut, tumour_slp) {
   mut_entrez <- im <- pvalue <- slp_symbol <- is_slp <- cell_line <- NULL
@@ -84,10 +81,26 @@ scr_slp <- function(cell, screen_data, cell_mut, tumour_slp) {
 #' @references
 #'   Landis JR, Koch GG (1977) The measurement of observer agreement for categorical data. Biomet-rics, 33: 159-174.
 #' @examples
-#' \dontrun{
-#' #- scr_res is generated from scr_slp.
-#' k_res <- cons_slp(scr_res, corr_slp, ncore = 2)
-#' }
+#' library(data.table)
+#' data("example_z")
+#' data("comp_mut")
+#' comp_res <- comp_slp(example_z, comp_mut, ncore = 2)
+#'
+#' data("example_expr")
+#' data("corr_mut")
+#' corr_res <- corr_slp(example_expr, corr_mut, ncore = 2)
+#'
+#' merged_res <- merge_slp(comp_res, corr_res)
+#'
+#' data("brca_screen")
+#' data("brca_mut")
+#'
+#' scr_res  <- lapply(unique(brca_screen$cell_line), scr_slp, brca_screen, brca_mut, merged_res)
+#' scr_res[lengths(scr_res) == 0] <- NULL
+#' scr_res  <- rbindlist(scr_res)
+#'
+#' #- Note there are no recurrent mutations for the toy example, see vignette for practical examples.
+#' k_res <- cons_slp(scr_res, merged_res, ncore = 2)
 #' @export
 cons_slp <- function(screen_slp, tumour_slp, ncore = 2) {
   padj <- pvalue <- cons_slp_entrez <- N <- mut_entrez <- is_slp <- i <- NULL
@@ -147,6 +160,8 @@ cons_slp <- function(screen_slp, tumour_slp, ncore = 2) {
     } else {
       message("(II) No consensus SLPs.")
     }
+  } else {
+    message("(II) No recurrent mutations among cell lines.")
   }
 }
 

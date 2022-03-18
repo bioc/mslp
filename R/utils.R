@@ -21,7 +21,7 @@
 #'   Cerami et al. The cBio Cancer Genomics Portal: An Open Platform for Exploring Multidimensional Cancer Genomics Data. Cancer Discovery. May 2012 2; 401.
 #'   Gao et al. Integrative analysis of complex cancer genomics and clinical profiles using the cBioPortal. Sci. Signal. 6, pl1 (2013).
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' #- See vignette for more details.
 #' P_mut  <- "data_mutations_extended.txt"
 #' P_cna  <- "data_CNA.txt"
@@ -126,10 +126,15 @@ pp_tcga <- function(p_mut,
 #'     \item{dualhit}{Whether the slp is identified by \code{\link{corr_slp}} and \code{\link{comp_slp}}.}
 #' }
 #' @examples
-#' \dontrun{
-#' #- See comp_slp and corr_slp on how SLPs are identified.
+#' data("example_z")
+#' data("comp_mut")
+#' comp_res <- comp_slp(example_z, comp_mut, ncore = 2)
+#'
+#' data("example_expr")
+#' data("corr_mut")
+#' corr_res <- corr_slp(example_expr, corr_mut, ncore = 2)
+#'
 #' res <- merge_slp(comp_res, corr_res)
-#' }
 #' @export
 merge_slp <- function(comp_data, corr_data) {
   mut_entrez <- idx <- dualhit <- slp_entrez <- pvalue <- im <- NULL
@@ -170,15 +175,14 @@ merge_slp <- function(comp_data, corr_data) {
 #'   The optimal thresholds are averaged to get the final threshold.
 #' @return A data.table with mut_entrez (mutation entrez_id) and roc_thresh (estimated im threshold).
 #' @examples
-#' \dontrun{
 #' #- Toy examples.
 #' data(example_expr)
 #' data(corr_mut)
-#' mutgene    <- sample(intersect(corr_mut$mut_entrez, rownames(example_expr)), 5)
-#' nperm      <- 50
-#' res        <- lapply(seq_len(nperm), function(x) corr_slp(expr_data, mut_data, ncore = 2, mutgene = mutgene))
+#'
+#' mutgene    <- sample(intersect(corr_mut$mut_entrez, rownames(example_expr)), 2)
+#' nperm      <- 5
+#' res        <- lapply(seq_len(nperm), function(x) corr_slp(example_expr, corr_mut, ncore = 2, mutgene = mutgene))
 #' roc_thresh <- est_im(res, ncore = 2)
-#' }
 #' @export
 est_im <- function(permu_data, fdr_thresh = 0.001, ncore = 2) {
   permu_id <- gene <- im <- slp_entrez <- fdr <- mut_entrez <- NULL
