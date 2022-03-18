@@ -11,9 +11,8 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: false
 RoxygenNote: 7.1.2
-Depends: R (>= 3.5.0)
+Depends: R (>= 3.5.0), data.table (>= 1.13.0)
 Imports:
-    data.table (>= 1.13.0),
     doFuture,
     doRNG,
     fmsb,
