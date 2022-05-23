@@ -35,12 +35,41 @@ Identify whether screen hits are SLPs of mutations deteced in both patients and 
 predicted SLPs in \code{\link{corr_slp}} and \code{\link{comp_slp}}.
 }
 \examples{
-#- Toy examples, see vignette for more.
-data("example_expr")
-data("corr_mut")
-data("brca_screen")
-data("brca_mut")
+library(magrittr)
+data(compSLP)
+data(corrSLP)
+merged_res <- merge_slp(compSLP, corrSLP)
 
-res     <- corr_slp(example_expr, corr_mut, ncore = 2)
-scr_res <- lapply(intersect(brca_mut$cell_line, brca_screen$cell_line), scr_slp, brca_screen, brca_mut, res)
+#- Toy hits data.
+screen_1 <- merged_res[, .(slp_entrez, slp_symbol)] \%>\%
+    unique \%>\%
+    .[sample(nrow(.), round(.8 * nrow(.)))] \%>\%
+    setnames(c(1, 2), c("screen_entrez", "screen_symbol")) \%>\%
+    .[, cell_line := "cell_1"]
+
+screen_2 <- merged_res[, .(slp_entrez, slp_symbol)] \%>\%
+    unique \%>\%
+    .[sample(nrow(.), round(.8 * nrow(.)))] \%>\%
+    setnames(c(1, 2), c("screen_entrez", "screen_symbol")) \%>\%
+    .[, cell_line := "cell_2"]
+
+screen_hit <- rbind(screen_1, screen_2)
+
+#- Toy mutations data.
+mut_1 <- merged_res[, .(mut_entrez)] \%>\%
+    unique \%>\%
+    .[sample(nrow(.), round(.8 * nrow(.)))] \%>\%
+    .[, cell_line := "cell_1"]
+
+mut_2 <- merged_res[, .(mut_entrez)] \%>\%
+    unique \%>\%
+    .[sample(nrow(.), round(.8 * nrow(.)))] \%>\%
+    .[, cell_line := "cell_2"]
+
+mut_info <- rbind(mut_1, mut_2)
+
+#- Hits that are identified as SLPs.
+scr_res <- lapply(c("cell_1", "cell_2"), scr_slp, screen_hit, mut_info, merged_res)
+scr_res[lengths(scr_res) == 0] <- NULL
+scr_res <- rbindlist(scr_res)
 }

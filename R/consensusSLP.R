@@ -21,14 +21,43 @@
 #'     \item{dualhit}{Whether the slp is identified by \code{\link{corr_slp}} and \code{\link{comp_slp}}.}
 #' }
 #' @examples
-#' #- Toy examples, see vignette for more.
-#' data("example_expr")
-#' data("corr_mut")
-#' data("brca_screen")
-#' data("brca_mut")
+#' library(magrittr)
+#' data(compSLP)
+#' data(corrSLP)
+#' merged_res <- merge_slp(compSLP, corrSLP)
 #'
-#' res     <- corr_slp(example_expr, corr_mut, ncore = 2)
-#' scr_res <- lapply(intersect(brca_mut$cell_line, brca_screen$cell_line), scr_slp, brca_screen, brca_mut, res)
+#' #- Toy hits data.
+#' screen_1 <- merged_res[, .(slp_entrez, slp_symbol)] %>%
+#'     unique %>%
+#'     .[sample(nrow(.), round(.8 * nrow(.)))] %>%
+#'     setnames(c(1, 2), c("screen_entrez", "screen_symbol")) %>%
+#'     .[, cell_line := "cell_1"]
+#'
+#' screen_2 <- merged_res[, .(slp_entrez, slp_symbol)] %>%
+#'     unique %>%
+#'     .[sample(nrow(.), round(.8 * nrow(.)))] %>%
+#'     setnames(c(1, 2), c("screen_entrez", "screen_symbol")) %>%
+#'     .[, cell_line := "cell_2"]
+#'
+#' screen_hit <- rbind(screen_1, screen_2)
+#'
+#' #- Toy mutations data.
+#' mut_1 <- merged_res[, .(mut_entrez)] %>%
+#'     unique %>%
+#'     .[sample(nrow(.), round(.8 * nrow(.)))] %>%
+#'     .[, cell_line := "cell_1"]
+#'
+#' mut_2 <- merged_res[, .(mut_entrez)] %>%
+#'     unique %>%
+#'     .[sample(nrow(.), round(.8 * nrow(.)))] %>%
+#'     .[, cell_line := "cell_2"]
+#'
+#' mut_info <- rbind(mut_1, mut_2)
+#'
+#' #- Hits that are identified as SLPs.
+#' scr_res <- lapply(c("cell_1", "cell_2"), scr_slp, screen_hit, mut_info, merged_res)
+#' scr_res[lengths(scr_res) == 0] <- NULL
+#' scr_res <- rbindlist(scr_res)
 #' @export
 scr_slp <- function(cell, screen_data, cell_mut, tumour_slp) {
   mut_entrez <- im <- pvalue <- slp_symbol <- is_slp <- cell_line <- NULL
@@ -81,26 +110,8 @@ scr_slp <- function(cell, screen_data, cell_mut, tumour_slp) {
 #' @references
 #'   Landis JR, Koch GG (1977) The measurement of observer agreement for categorical data. Biomet-rics, 33: 159-174.
 #' @examples
-#' library(data.table)
-#' data("example_z")
-#' data("comp_mut")
-#' comp_res <- comp_slp(example_z, comp_mut, ncore = 2)
-#'
-#' data("example_expr")
-#' data("corr_mut")
-#' corr_res <- corr_slp(example_expr, corr_mut, ncore = 2)
-#'
-#' merged_res <- merge_slp(comp_res, corr_res)
-#'
-#' data("brca_screen")
-#' data("brca_mut")
-#'
-#' scr_res  <- lapply(unique(brca_screen$cell_line), scr_slp, brca_screen, brca_mut, merged_res)
-#' scr_res[lengths(scr_res) == 0] <- NULL
-#' scr_res  <- rbindlist(scr_res)
-#'
-#' #- Note there are no recurrent mutations for the toy example, see vignette for practical examples.
-#' k_res <- cons_slp(scr_res, merged_res, ncore = 2)
+#' #- See the examples in the vignette.
+#' if (FALSE) k_res <- cons_slp(scr_res, merged_res, ncore = 2)
 #' @export
 cons_slp <- function(screen_slp, tumour_slp, ncore = 2) {
   padj <- pvalue <- cons_slp_entrez <- N <- mut_entrez <- is_slp <- i <- NULL
