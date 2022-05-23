@@ -1,17 +1,3 @@
-#' Project Drive screen data for two brca cell lines
-#'
-#' Screen hits are selected with RSA <= -2.
-#'
-#' @format A data.table with three columns: "screen_entrez", "screen_symbol" and "cell_line".
-"brca_screen"
-
-#' Mutations in two brca cell lines.
-#'
-#' Mutation gene ids and related cell lines.
-#'
-#' @format A data.table.
-"brca_mut"
-
 #' Patients mutations to be use in the comp_slp
 #'
 #' Mutations and related TCGA ids.
@@ -39,3 +25,14 @@
 #'
 #' @format A matrix.
 "example_z"
+
+
+#' SLPs predicted by comp_slp
+#'
+#' @format A data.table.
+"compSLP"
+
+#' SLPs predicted by corr_slp
+#'
+#' @format A data.table.
+"corrSLP"
