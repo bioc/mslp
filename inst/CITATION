@@ -1,0 +1,11 @@
+citHeader("To cite mslp, please use:")
+
+citEntry(entry = "article",
+  author = personList(as.person("Chunxuan Shao")),
+  title = "mslp: a comprehensive pipeline in predicting cancer mutations specific synthetic lethal partners",
+  journal = "biorxiv",
+  year = "2021",
+  doi = "10.1101/2021.12.15.472776",
+  url = "https://www.biorxiv.org/content/10.1101/2021.12.15.472776v1",
+  textVersion = "Chunxuan Shao. mslp: a comprehensive pipeline in predicting cancer mutations specific synthetic lethal partners. biorxiv (2021)."
+)
