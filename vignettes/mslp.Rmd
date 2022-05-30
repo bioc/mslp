@@ -62,34 +62,31 @@ data(example_z)
 We use `comp_slp` to predict SLPs compensated for  mutation-induced loss of functions. Briefly, it identifies over-expressed genes in patients with interseted mutations via the rank products algorithm [2], while co-occurring mutations are removed beforehand.
 
 ```{r}
-res <- comp_slp(example_z, comp_mut)
-saveRDS(res, file = "compSLP_res.rds")
+res_comp <- comp_slp(example_z, comp_mut)
+saveRDS(res_comp, file = "compSLP_res.rds")
 ```
 
 ## Call SLPs from correlationModule
 We use `corr_slp` to predict SLPs correlated with mutations in wide type patients. Internally GENIE3 is used to select potential SLPs [3]. The im_thresh of 0.0016 was a rather robust value identified from various TCGA datasets with 100 random selected mutations and 50 repetitions.
 
 ```{r}
-res <- corr_slp(example_expr, corr_mut)
-saveRDS(res, "corrSLP_res.rds")
+res_corr <- corr_slp(example_expr, corr_mut)
+saveRDS(res_corr, "corrSLP_res.rds")
 
 #- Filter res by importance threshold to reduce false positive.
-im_thresh    <- 0.0016
-res_filtered <- res[im >= im_thresh]
-saveRDS(res_filtered, "corrSLP_filtered.rds")
+im_thresh <- 0.0016
+res_f     <- res_corr[im >= im_thresh]
 ```
 
 It is recommended to compute the `im_thresh` for each cancer type separately. We derived an approach estimating the threshold by running `corr_slp` for randomly selected mutations repeatedly. SLPs of high relevance are picked as "true" SLPs for each mutation using the rank products algorithm. We then calculated the best threshold of receiver operating characteristic curve  (ROC) of each repetation, and take the mean value across repetition. The average value among mutations is the final threshold. 
 
 ```{r}
 #- Random mutations and runs
-mutgene      <- sample(intersect(corr_mut$mut_entrez, rownames(example_expr)), 5)
-nperm        <- 3
-
-res          <- lapply(seq_len(nperm), function(x) corr_slp(example_expr, corr_mut, mutgene = mutgene))
-im_res       <- est_im(res)
-res_filtered <- res[im >= mean(im_res$roc_thresh)]
-saveRDS(res_filtered, "corrSLP_filtered.rds")
+mutgene    <- sample(intersect(corr_mut$mut_entrez, rownames(example_expr)), 5)
+nperm      <- 3
+res_random <- lapply(seq_len(nperm), function(x) corr_slp(example_expr, corr_mut, mutgene = mutgene))
+im_res     <- est_im(res_random)
+res_f_2    <- res_corr[im >= mean(im_res$roc_thresh)]
 ```
 
 ## Call consensus SLPs
@@ -127,9 +124,9 @@ Now we are ready to uncover consensus SLPs, which are 1) hits in genetic screens
 ```{r}
 #- Merge data.
 #- Load previous results.
-comp_res   <- readRDS("compSLP_res.rds")
-corr_res   <- readRDS("corrSLP_res.rds")
-merged_res <- merge_slp(comp_res, corr_res)
+res_comp   <- readRDS("compSLP_res.rds")
+res_corr   <- readRDS("corrSLP_res.rds")
+merged_res <- merge_slp(res_comp, res_corr)
 
 #- Toy hits data. 
 screen_1 <- merged_res[, .(slp_entrez, slp_symbol)] %>%
