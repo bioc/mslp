@@ -30,11 +30,11 @@ Merge predcted SLPs from comp_slp and corr_slp.
 \examples{
 data("example_z")
 data("comp_mut")
-comp_res <- comp_slp(example_z, comp_mut, ncore = 2)
+comp_res <- comp_slp(example_z, comp_mut)
 
 data("example_expr")
 data("corr_mut")
-corr_res <- corr_slp(example_expr, corr_mut, ncore = 2)
+corr_res <- corr_slp(example_expr, corr_mut)
 
 res <- merge_slp(comp_res, corr_res)
 }

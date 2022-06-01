@@ -7,7 +7,6 @@
 comp_slp(
   zscore_data,
   mut_data,
-  ncore = 2,
   mutgene = NULL,
   positive_perc = 0.5,
   p_thresh = 0.01,
@@ -18,8 +17,6 @@ comp_slp(
 \item{zscore_data}{a matrix (genes by patients) reflecting gene expression related to wide type samples. For example, generated from \code{\link{pp_tcga}}.}
 
 \item{mut_data}{a data.table with columns "patientid" and "mut_entrez".}
-
-\item{ncore}{number of cores for parallel computing.}
 
 \item{mutgene}{identify SLPs for sepecific muatation (gene symbols). If NULL (by default), the intersection genes between zscore_data and mut_data are used.}
 
@@ -45,7 +42,12 @@ Identify SLPs compensating for the loss of function of mutations. The up-regulat
 }
 \examples{
 #- Toy examples, see vignette for more.
+#- Add the parallel backend.
+require(future)
+require(doFuture)
+plan(multisession, workers = 2)
 data("example_z")
 data("comp_mut")
-res <- comp_slp(example_z, comp_mut, ncore = 2)
+res <- comp_slp(example_z, comp_mut)
+plan(sequential)
 }

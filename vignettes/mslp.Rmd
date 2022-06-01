@@ -45,11 +45,13 @@ saveRDS(res$expr_data, "expr_data.rds")
 saveRDS(res$zscore_data, "zscore_data.rds")
 ```
 
-Here we load toy datasets.
+Here we load toy datasets. `mslp` uses `Future` as the paraellel backend, and it is recommend to paraellel th compuation for `corr_slp`, `comp_slp`, `cons_slp` and `est_im`.
 
 ```{r}
-library(mslp)
+require(future)
+require(doFuture)
 library(magrittr)
+library(mslp)
 #- mutation from TCGA datasets to computate SLP via comp_slp
 data(comp_mut)
 #- mutation from TCGA datasets to computate SLP via corr_slp. 
@@ -62,31 +64,37 @@ data(example_z)
 We use `comp_slp` to predict SLPs compensated for  mutation-induced loss of functions. Briefly, it identifies over-expressed genes in patients with interseted mutations via the rank products algorithm [2], while co-occurring mutations are removed beforehand.
 
 ```{r}
+plan(multisession, workers = 2)
 res_comp <- comp_slp(example_z, comp_mut)
 saveRDS(res_comp, file = "compSLP_res.rds")
+plan(sequential)
 ```
 
 ## Call SLPs from correlationModule
 We use `corr_slp` to predict SLPs correlated with mutations in wide type patients. Internally GENIE3 is used to select potential SLPs [3]. The im_thresh of 0.0016 was a rather robust value identified from various TCGA datasets with 100 random selected mutations and 50 repetitions.
 
 ```{r}
+plan(multisession, workers = 2)
 res_corr <- corr_slp(example_expr, corr_mut)
 saveRDS(res_corr, "corrSLP_res.rds")
 
 #- Filter res by importance threshold to reduce false positive.
 im_thresh <- 0.0016
 res_f     <- res_corr[im >= im_thresh]
+plan(sequential)
 ```
 
 It is recommended to compute the `im_thresh` for each cancer type separately. We derived an approach estimating the threshold by running `corr_slp` for randomly selected mutations repeatedly. SLPs of high relevance are picked as "true" SLPs for each mutation using the rank products algorithm. We then calculated the best threshold of receiver operating characteristic curve  (ROC) of each repetation, and take the mean value across repetition. The average value among mutations is the final threshold. 
 
 ```{r}
+plan(multisession, workers = 2)
 #- Random mutations and runs
 mutgene    <- sample(intersect(corr_mut$mut_entrez, rownames(example_expr)), 5)
 nperm      <- 3
 res_random <- lapply(seq_len(nperm), function(x) corr_slp(example_expr, corr_mut, mutgene = mutgene))
 im_res     <- est_im(res_random)
 res_f_2    <- res_corr[im >= mean(im_res$roc_thresh)]
+plan(sequential)
 ```
 
 ## Call consensus SLPs
@@ -122,6 +130,7 @@ brca_ccle_mut <- ccle_mut[cell_line %in% unique(ccle[CCLE_tumor_type == "breast"
 Now we are ready to uncover consensus SLPs, which are 1) hits in genetic screens, 2) consistent for same mutations among cell lines. `scr_slp` and `cons_slp` are used for these two steps, respectively.
 
 ```{r}
+plan(multisession, workers = 2)
 #- Merge data.
 #- Load previous results.
 res_comp   <- readRDS("compSLP_res.rds")
@@ -166,6 +175,7 @@ k_res   <- cons_slp(scr_res, merged_res)
 k_res_f <- k_res[kappa_value >= 0.6 & padj <= 0.1]
 
 sessionInfo()
+plan(sequential)
 ```
 
 ## Reference

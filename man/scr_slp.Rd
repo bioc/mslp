@@ -35,6 +35,9 @@ Identify whether screen hits are SLPs of mutations deteced in both patients and 
 predicted SLPs in \code{\link{corr_slp}} and \code{\link{comp_slp}}.
 }
 \examples{
+require(future)
+require(doFuture)
+plan(multisession, workers = 2)
 library(magrittr)
 data(compSLP)
 data(corrSLP)
@@ -72,4 +75,5 @@ mut_info <- rbind(mut_1, mut_2)
 scr_res <- lapply(c("cell_1", "cell_2"), scr_slp, screen_hit, mut_info, merged_res)
 scr_res[lengths(scr_res) == 0] <- NULL
 scr_res <- rbindlist(scr_res)
+plan(sequential)
 }

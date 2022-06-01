@@ -4,7 +4,6 @@
 #'
 #' @param zscore_data a matrix (genes by patients) reflecting gene expression related to wide type samples. For example, generated from \code{\link{pp_tcga}}.
 #' @param mut_data a data.table with columns "patientid" and "mut_entrez".
-#' @param ncore number of cores for parallel computing.
 #' @param mutgene identify SLPs for sepecific muatation (gene symbols). If NULL (by default), the intersection genes between zscore_data and mut_data are used.
 #' @param positive_perc keep genes with postive zscore in at least positive_perc * number of mutation patients.
 #' @param p_thresh pvalue threshold to filter out results.
@@ -20,13 +19,17 @@
 #' }
 #' @examples
 #' #- Toy examples, see vignette for more.
+#' #- Add the parallel backend.
+#' require(future)
+#' require(doFuture)
+#' plan(multisession, workers = 2)
 #' data("example_z")
 #' data("comp_mut")
-#' res <- comp_slp(example_z, comp_mut, ncore = 2)
+#' res <- comp_slp(example_z, comp_mut)
+#' plan(sequential)
 #' @export
 comp_slp <- function(zscore_data,
     mut_data,
-    ncore         = 2,
     mutgene       = NULL,
     positive_perc = 0.5,
     p_thresh      = 0.01,
@@ -45,22 +48,10 @@ comp_slp <- function(zscore_data,
 
   message("(==) Number of mutations: ", length(mutgene), ".")
 
-  if (ncore > 1) {
-    doFuture::registerDoFuture()
-    future::plan(future::multisession, workers = ncore)
-
-    suppressPackageStartupMessages(
-      res <- foreach(i = mutgene) %dopar% {
-        fn_sub_comp_slp(i, zscore_data, mut_lite, positive_perc = positive_perc, p_thresh = p_thresh, ...)
-      }
-    )
-  } else {
-    suppressPackageStartupMessages(
-      res <- foreach(i = mutgene) %do% {
-        fn_sub_comp_slp(i, zscore_data, mut_lite, positive_perc = positive_perc, p_thresh = p_thresh, ...)
-      }
-    )
-  }
+  suppressPackageStartupMessages(
+    res <- foreach(i = mutgene) %dopar% {
+      fn_sub_comp_slp(i, zscore_data, mut_lite, positive_perc = positive_perc, p_thresh = p_thresh, ...)
+    })
 
   res[lengths(res) == 0] <- NULL
 

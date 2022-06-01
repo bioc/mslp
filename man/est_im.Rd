@@ -4,14 +4,12 @@
 \alias{est_im}
 \title{Estimate the importance threshold for GENIE3}
 \usage{
-est_im(permu_data, fdr_thresh = 0.001, ncore = 2)
+est_im(permu_data, fdr_thresh = 0.001)
 }
 \arguments{
 \item{permu_data}{permuated \code{\link{corr_slp}} results.}
 
 \item{fdr_thresh}{fdr threshold to selected "TRUE" SLPs.}
-
-\item{ncore}{number of cores for parallel computing.}
 }
 \value{
 A data.table with mut_entrez (mutation entrez_id) and roc_thresh (estimated im threshold).
@@ -27,11 +25,14 @@ We first generate a SLPs by repetition matrix from repetition GENIE3 results.
 }
 \examples{
 #- Toy examples.
+require(future)
+require(doFuture)
+plan(multisession, workers = 2)
 data(example_expr)
 data(corr_mut)
-
 mutgene    <- sample(intersect(corr_mut$mut_entrez, rownames(example_expr)), 2)
 nperm      <- 5
-res        <- lapply(seq_len(nperm), function(x) corr_slp(example_expr, corr_mut, ncore = 2, mutgene = mutgene))
-roc_thresh <- est_im(res, ncore = 2)
+res        <- lapply(seq_len(nperm), function(x) corr_slp(example_expr, corr_mut, mutgene = mutgene))
+roc_thresh <- est_im(res)
+plan(sequential)
 }

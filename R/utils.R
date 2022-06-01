@@ -128,11 +128,11 @@ pp_tcga <- function(p_mut,
 #' @examples
 #' data("example_z")
 #' data("comp_mut")
-#' comp_res <- comp_slp(example_z, comp_mut, ncore = 2)
+#' comp_res <- comp_slp(example_z, comp_mut)
 #'
 #' data("example_expr")
 #' data("corr_mut")
-#' corr_res <- corr_slp(example_expr, corr_mut, ncore = 2)
+#' corr_res <- corr_slp(example_expr, corr_mut)
 #'
 #' res <- merge_slp(comp_res, corr_res)
 #' @export
@@ -167,7 +167,6 @@ merge_slp <- function(comp_data, corr_data) {
 #'
 #' @param permu_data permuated \code{\link{corr_slp}} results.
 #' @param fdr_thresh fdr threshold to selected "TRUE" SLPs.
-#' @param ncore number of cores for parallel computing.
 #' @details
 #'   We first generate a SLPs by repetition matrix from repetition GENIE3 results.
 #'   SLPs with high im value in repetitions are selected and condsidered as "TRUE" SLPs via the rank product algorithm.
@@ -176,21 +175,22 @@ merge_slp <- function(comp_data, corr_data) {
 #' @return A data.table with mut_entrez (mutation entrez_id) and roc_thresh (estimated im threshold).
 #' @examples
 #' #- Toy examples.
+#' require(future)
+#' require(doFuture)
+#' plan(multisession, workers = 2)
 #' data(example_expr)
 #' data(corr_mut)
-#'
 #' mutgene    <- sample(intersect(corr_mut$mut_entrez, rownames(example_expr)), 2)
 #' nperm      <- 5
-#' res        <- lapply(seq_len(nperm), function(x) corr_slp(example_expr, corr_mut, ncore = 2, mutgene = mutgene))
-#' roc_thresh <- est_im(res, ncore = 2)
+#' res        <- lapply(seq_len(nperm), function(x) corr_slp(example_expr, corr_mut, mutgene = mutgene))
+#' roc_thresh <- est_im(res)
+#' plan(sequential)
 #' @export
-est_im <- function(permu_data, fdr_thresh = 0.001, ncore = 2) {
+est_im <- function(permu_data, fdr_thresh = 0.001) {
   permu_id <- gene <- im <- slp_entrez <- fdr <- mut_entrez <- NULL
 
   mutgene <- lapply(permu_data, function(x) x$mut_entrez) %>% unlist %>% unique
 
-  doFuture::registerDoFuture()
-  future::plan(future::multisession, workers = ncore)
   suppressPackageStartupMessages(
     im_res <- foreach(gene = mutgene) %dopar% {
       #- Get the slp_entrez for a mutation.

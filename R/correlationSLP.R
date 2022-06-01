@@ -5,7 +5,6 @@
 #'
 #' @param expr_data an expression matrix, genes by patients.
 #' @param mut_data a data.table with columns "patientid" and "mut_entrez".
-#' @param ncore number of cores for parallel computing.
 #' @param mutgene identify SLPs for sepecific muatation (gene symbols). If NULL (by default), the intersection genes between expr_data and mut_data are used.
 #' @param im_thresh minimum importance threshold.
 #' @param topgene top N genes above the \code{im_thresh}.
@@ -21,11 +20,15 @@
 #' }
 #' @examples
 #' #- Toy examples, see vignette for more.
+#' require(future)
+#' require(doFuture)
+#' plan(multisession, workers = 2)
 #' data("example_expr")
 #' data("corr_mut")
-#' res <- corr_slp(example_expr, corr_mut, ncore = 2)
+#' res <- corr_slp(example_expr, corr_mut)
+#' plan(sequential)
 #' @export
-corr_slp <- function(expr_data, mut_data, ncore = 2, mutgene = NULL, im_thresh = 0.001, topgene = 2000, ...) {
+corr_slp <- function(expr_data, mut_data, mutgene = NULL, im_thresh = 0.001, topgene = 2000, ...) {
   i <- symbol <- im <- mut_entrez <- NULL
 
   if (is.null(mutgene)) {
@@ -38,22 +41,10 @@ corr_slp <- function(expr_data, mut_data, ncore = 2, mutgene = NULL, im_thresh =
 
   message("(II) Number of mutations: ", length(mutgene), ".")
 
-  if (ncore > 1) {
-    doFuture::registerDoFuture()
-    future::plan(future::multisession, workers = ncore)
-
-    suppressPackageStartupMessages(
-      genie3_res <- foreach(i = mutgene) %dorng% {
-        fn_sub_corr_slp(i, expr_data, mut_data, im_thresh, topgene, ...)
-      }
-    )
-  } else {
-    suppressPackageStartupMessages(
-      genie3_res <- foreach(i = mutgene) %do% {
-        fn_sub_corr_slp(i, expr_data, mut_data, im_thresh, topgene, ...)
-      }
-    )
-  }
+  suppressPackageStartupMessages(
+    genie3_res <- foreach(i = mutgene) %dorng% {
+      fn_sub_corr_slp(i, expr_data, mut_data, im_thresh, topgene, ...)
+    })
 
   genie3_res[lengths(genie3_res) == 0] <- NULL
 

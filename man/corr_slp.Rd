@@ -7,7 +7,6 @@
 corr_slp(
   expr_data,
   mut_data,
-  ncore = 2,
   mutgene = NULL,
   im_thresh = 0.001,
   topgene = 2000,
@@ -18,8 +17,6 @@ corr_slp(
 \item{expr_data}{an expression matrix, genes by patients.}
 
 \item{mut_data}{a data.table with columns "patientid" and "mut_entrez".}
-
-\item{ncore}{number of cores for parallel computing.}
 
 \item{mutgene}{identify SLPs for sepecific muatation (gene symbols). If NULL (by default), the intersection genes between expr_data and mut_data are used.}
 
@@ -46,7 +43,11 @@ find genes highly correlated with mutations in wide type patients.
 }
 \examples{
 #- Toy examples, see vignette for more.
+require(future)
+require(doFuture)
+plan(multisession, workers = 2)
 data("example_expr")
 data("corr_mut")
-res <- corr_slp(example_expr, corr_mut, ncore = 2)
+res <- corr_slp(example_expr, corr_mut)
+plan(sequential)
 }
