@@ -21,8 +21,8 @@
 #'   Cerami et al. The cBio Cancer Genomics Portal: An Open Platform for Exploring Multidimensional Cancer Genomics Data. Cancer Discovery. May 2012 2; 401.
 #'   Gao et al. Integrative analysis of complex cancer genomics and clinical profiles using the cBioPortal. Sci. Signal. 6, pl1 (2013).
 #' @examples
-#' \donttest{
 #' #- See vignette for more details.
+#' if (FALSE) {
 #' P_mut  <- "data_mutations_extended.txt"
 #' P_cna  <- "data_CNA.txt"
 #' P_expr <- "data_RNA_Seq_v2_expression_median.txt"

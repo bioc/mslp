@@ -64,6 +64,8 @@
 #' plan(sequential)
 #' @export
 scr_slp <- function(cell, screen_data, cell_mut, tumour_slp) {
+  stopifnot(is.data.table(screen_data))
+
   mut_entrez <- im <- pvalue <- slp_symbol <- is_slp <- cell_line <- NULL
 
   if (!(cell %in% screen_data$cell_line)) stop("(EE) ", cell, " is not found in RSA data.")

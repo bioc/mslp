@@ -34,6 +34,8 @@ comp_slp <- function(zscore_data,
     positive_perc = 0.5,
     p_thresh      = 0.01,
     ...) {
+  stopifnot(is.matrix(zscore_data), is.data.table(mut_data))
+
   i <- symbol <- fdr <- mut_entrez <- V1 <- NULL
 
   #- Mutations found in at least two patients.

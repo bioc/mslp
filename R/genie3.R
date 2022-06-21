@@ -27,11 +27,7 @@ genie3 <- function(expr.matrix,
     nb.trees           = 1000,
     input.idx          = NULL,
     importance.measure = "IncNodePurity",
-    # seed               = NULL,
     trace              = FALSE, ...) {
-  # set random number generator seed if seed is given
-  # if (!is.null(seed)) set.seed(seed)
-
   # to be nice, report when parameter importance.measure is not correctly spelled
   if (importance.measure != "IncNodePurity" && importance.measure != "%IncMSE") {
     stop("Parameter importance.measure must be \"IncNodePurity\" or \"%IncMSE\"")
@@ -65,14 +61,15 @@ genie3 <- function(expr.matrix,
       missing.gene.names <- setdiff(input.gene.names, gene.names)
       if (length(missing.gene.names) != 0) {
         for (missing.gene.name in missing.gene.names) {
-          message(paste("Gene ", missing.gene.name, " was not in the expression matrix\n", sep = ""))
+          message("Gene ", missing.gene.name, " was not in the expression matrix\n")
         }
         stop("Aborting computation")
       }
     }
   }
 
-  if (methods::is(K, "numeric")) {
+  # if (methods::is(K, "numeric")) {
+  if (is.numeric(K)) {
     mtry <- K
   } else if (K == "sqrt") {
     mtry <- round(sqrt(num.input.genes))
@@ -83,15 +80,13 @@ genie3 <- function(expr.matrix,
   }
 
   if (trace) {
-    message(paste("Starting RF computations with ", nb.trees,
-                  " trees/target gene,\nand ", mtry,
-                  " candidate input genes/tree node\n",
-                  sep = ""))
-  }
+    message("Starting RF computations with ", nb.trees,
+            " trees/target gene,\nand ", mtry,
+            " candidate input genes/tree node\n")}
 
   if (is.null(ngene)) ngene <- num.genes
   for (target.gene.idx in seq_len(ngene)) {
-    if (trace) message(paste("Computing gene ", target.gene.idx, "/", ngene, "\n", sep = ""))
+    if (trace) message("Computing gene ", target.gene.idx, "/", ngene, "\n")
 
     target.gene.name       <- gene.names[target.gene.idx]
     these.input.gene.names <- setdiff(input.gene.names, target.gene.name)

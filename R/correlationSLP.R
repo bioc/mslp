@@ -29,6 +29,8 @@
 #' plan(sequential)
 #' @export
 corr_slp <- function(expr_data, mut_data, mutgene = NULL, im_thresh = 0.001, topgene = 2000, ...) {
+  stopifnot(is.matrix(expr_data), is.data.table(mut_data))
+
   i <- symbol <- im <- mut_entrez <- NULL
 
   if (is.null(mutgene)) {
@@ -94,7 +96,7 @@ fn_sub_corr_slp <- function(gene, expr_data, mut_data, im_thresh, topgene, ...) 
       setnames(c("from.gene", "to.gene"), c("slp_entrez", "mut_entrez")) %>%
       setcolorder("mut_entrez") %>%
       .[im >= im_thresh] %>%
-      .[1:topgene] %>%
+      .[seq_len(topgene)] %>%
       na.omit
     return(im_res)
   }
