@@ -1,7 +1,7 @@
 Package: mslp
 Type: Package
 Title: Predict synthetic lethal partners of tumour mutations
-Version: 0.99.7
+Version: 0.99.8
 Authors@R: person(given = "Chunxuan", family = "Shao", role = c("aut", "cre"), email = "c.shao@dkfz-heidelberg.de")
 Description: An integrated pipeline to predict the potential synthetic lethality partners (SLPs) of tumour mutations, 
    based on gene expression, mutation profiling and cell line genetic screens data. It has builtd-in support for data from cBioPortal.
@@ -11,13 +11,12 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: false
 RoxygenNote: 7.2.0
-Depends: R (>= 3.5.0), data.table (>= 1.13.0)
+Depends: R (>= 4.2.0), data.table (>= 1.13.0)
 Imports:
     doRNG,
     fmsb,
     foreach,
     magrittr,
-    methods,
     org.Hs.eg.db,
     pROC,
     randomForest,
