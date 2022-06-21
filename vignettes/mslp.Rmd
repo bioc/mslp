@@ -1,7 +1,8 @@
 ---
 title: "mslp"
+author: "Chunxuan Shao"
 output:
-  rmarkdown::html_vignette
+  BiocStyle::html_document
 vignette: >
   %\VignetteIndexEntry{mslp}
   %\VignetteEngine{knitr::rmarkdown}
@@ -15,19 +16,30 @@ knitr::opts_chunk$set(
 )
 ```
 
-Mslp is a comprehensive pipeline to predict potential synthetic lethal partners (SLPs) for human tumour mutations. The underlying assumpations are 1) SLPs are up-regulated to compensate the loss of function of mutations, and 2) SLPs correlates with mutations in the wide type patients.
+# Introduction
+`mslp` (Mutation specific Synthetic Lethal Partners) is a comprehensive pipeline to identify consensus SLPs for loss of function mutations in a cancer context-specific manner through integrating genomic and transcriptomic data from patients, as well as genetic screen data in cell line [1]. It is an unsupervised method which does not relies on training sets of curated SLPs. Compared to other approaches, mslp has the advantage of explicitly and stringently integrating available genetic screen data.
 
-Primary SLPs are first predicted by the compensationModule and correlationModule. Together with the genetic screen data, consensus SLPs are identified as recurrent primary SLPs of same muations in different cell lines. Following parts of the tutorial show a complete run from data preparation to consensus SLPs.
+In the pipeline, we first infer the primary SLPs based on two simple yet complementary assumptions: 1) expression of mutations correlate with SLPs in wide type patients, 2) over-expression of SLPs compensate for the loss of function of the mutation. Two computational modules, correlationSLP and compensationSLP, are derived from state-of-art statistical methods to realize the assumptions with the ever-increasing patient omics data. Further, in spite of complex gene-gene interaction, we hypothesize that genetic perturbations targeting mutation specific SLPs would likely reduce cell viability. Thus, for the recurrent mutations detected in both patient tumors and cancer cell lines, we develope the idea of consensus SLPs under two constraints, 1) primary SLPs are screen hits, 2) consistent impact on cell viability in different cell lines. When applied to real datasets, we found that perturbation of predicted consensus SLPs has a significant impact on cell viability compared to other hits. Thus, mslp provides a novel approach to study mutation specific SLPs with great flexibilities. More on mslp could be found in the biorxiv paper.
 
+# Installation
+Install the package from Bioconductor.
+
+```{r, eval = FALSE}
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("mslp")
+```
+
+# Analysis
 ## Data preprocessing
-In the tutorial we could use files from PanCancer Atlas, provided by [cBioPortal](https://www.cbioportal.org/) [1].
+The raw data could be downloaded from public databases, like [cBioPortal](https://www.cbioportal.org/) [2], where the following necessary files are needed:
 
 - mutation profiles, "data_mutations_extended.txt".
 - CNA profiles, "data_CNA.txt".
-- gene exprssion, "data_RNA_Seq_v2_expression_median.txt".
+- gene expression, "data_RNA_Seq_v2_expression_median.txt".
 - z-score data, "data_RNA_Seq_v2_mRNA_median_Zscores.txt".
 
-It is possible to use customized datasets, simply following the format and column names of above files, e.g., "data_mutations_extended.txt" is a gene by sample matrix, with "Hugo_Symbol", "Entrez_Gene_Id" as the first two columns. Three columns are mandatory in mutation profiles: "Tumor_Sample_Barcode", "Gene" and "Variant_Classification", while "Gene" contains the Ensembl gene ids.
+It is possible to use customized datasets, simply following the format and column names of above files, e.g., "data_mutations_extended.txt" is a gene by sample matrix, with "Hugo_Symbol", "Entrez_Gene_Id" as the first two columns. Three columns are mandatory in mutation profiles: "Tumor_Sample_Barcode", "Gene" and "Variant_Classification", while "Gene" contains the Ensembl gene ids. `pp_tcga` could be used to preprocess the data.
 
 ```{r, eval = FALSE}
 #- Preprocessing the data.
@@ -45,8 +57,7 @@ saveRDS(res$expr_data, "expr_data.rds")
 saveRDS(res$zscore_data, "zscore_data.rds")
 ```
 
-Here we load toy datasets. `mslp` uses `Future` as the paraellel backend, and it is recommend to paraellel th compuation for `corr_slp`, `comp_slp`, `cons_slp` and `est_im`.
-
+Here we load toy datasets showing the proper data formats.
 ```{r}
 require(future)
 require(doFuture)
@@ -54,14 +65,15 @@ library(magrittr)
 library(mslp)
 #- mutation from TCGA datasets to computate SLP via comp_slp
 data(comp_mut)
-#- mutation from TCGA datasets to computate SLP via corr_slp. 
+#- mutation from TCGA datasets to computate SLP via corr_slp.
 data(corr_mut)
 data(example_expr)
 data(example_z)
 ```
 
 ## Call SLPs from compensationModule
-We use `comp_slp` to predict SLPs compensated for  mutation-induced loss of functions. Briefly, it identifies over-expressed genes in patients with interseted mutations via the rank products algorithm [2], while co-occurring mutations are removed beforehand.
+We use `comp_slp` to predict SLPs compensated for loss of functions due to mutations. Briefly, we identify overexpressed genes in patients with interested mutations via the rank products algorithm [3], while co-occurring mutations are removed beforehand. `mslp` uses `Future` as the parallel backend, and it is recommended to run `corr_slp`, `comp_slp`, `cons_slp` and `est_im` in parallel.
+
 
 ```{r}
 plan(multisession, workers = 2)
@@ -71,20 +83,20 @@ plan(sequential)
 ```
 
 ## Call SLPs from correlationModule
-We use `corr_slp` to predict SLPs correlated with mutations in wide type patients. Internally GENIE3 is used to select potential SLPs [3]. The im_thresh of 0.0016 was a rather robust value identified from various TCGA datasets with 100 random selected mutations and 50 repetitions.
+We use `corr_slp` to predict SLPs correlated with mutations in wide type patients. Internally, GENIE3 is used to select potential SLPs [3]. The im_thresh of 0.0016 was a rather robust threshold identified from various TCGA datasets with 100 random selected mutations and 50 repetitions.
 
 ```{r}
 plan(multisession, workers = 2)
 res_corr <- corr_slp(example_expr, corr_mut)
 saveRDS(res_corr, "corrSLP_res.rds")
 
-#- Filter res by importance threshold to reduce false positive.
+#- Filter res by importance threshold to reduce false positives.
 im_thresh <- 0.0016
 res_f     <- res_corr[im >= im_thresh]
 plan(sequential)
 ```
 
-It is recommended to compute the `im_thresh` for each cancer type separately. We derived an approach estimating the threshold by running `corr_slp` for randomly selected mutations repeatedly. SLPs of high relevance are picked as "true" SLPs for each mutation using the rank products algorithm. We then calculated the best threshold of receiver operating characteristic curve  (ROC) of each repetation, and take the mean value across repetition. The average value among mutations is the final threshold. 
+It is recommended to compute the `im_thresh` for each cancer type separately. We derived an approach estimating the threshold by running `corr_slp` for randomly selected mutations repeatedly. SLPs of high relevance are picked as "true" SLPs for each mutation using the rank products algorithm. We then calculated the best threshold of receiver operating characteristic curve  (ROC) of each repetition, and took the mean value across repetition. The average value among mutations is the final threshold.
 
 ```{r}
 plan(multisession, workers = 2)
@@ -98,13 +110,13 @@ plan(sequential)
 ```
 
 ## Call consensus SLPs
-The mutation profiles and genetic screen data of cancer cell lines are required for this step. Cancer Cell Line Encyclopedia (CCLE) is a great place to find mutation data [4]; and genetic screen results could be found in datatsets such as Project Drive [5] and DepMap [6].
+The mutation profiles and genetic screen data of cancer cell lines are required for this step. The Cancer Cell Line Encyclopedia (CCLE) is a great place to find mutation data [5]; and genetic screen results could be found in datasets such as Project Drive [6] and DepMap [7].
 
-For example, following codes show how to extract mutation data from CCLE.
+For example, the following codes show how to extract mutation data from CCLE.
 ```{r, eval = FALSE}
 library(readxl)
 
-#- nature11003-s3.xls is available in the supplmentary data of CCLE publication.
+#- nature11003-s3.xls is available in the supplementary data of CCLE publication.
 ccle <- readxl::read_excel("nature11003-s3.xls", sheet = "Table S1", skip = 2) %>%
   as.data.frame %>%
   set_names(gsub(" ", "_", names(.))) %>%
@@ -112,7 +124,7 @@ ccle <- readxl::read_excel("nature11003-s3.xls", sheet = "Table S1", skip = 2) %
   .[, CCLE_name := toupper(CCLE_name)] %>%
   unique
 
-#- ONly use the Nonsynonymous Mutations. CCLE_DepMap_18Q1_maf_20180207.txt could be downloaded in the CCLE website.
+#- Only use the Nonsynonymous Mutations. CCLE_DepMap_18Q1_maf_20180207.txt can be downloaded from the CCLE website.
 #- Only need the columns of cell_line and mut_entrez.
 mut_type  <- c("Missense_Mutation", "Nonsense_Mutation", "Frame_Shift_Del", "Frame_Shift_Ins", "In_Frame_Del", "In_Frame_Ins", "Nonstop_Mutation")
 ccle_mut  <- fread("CCLE_DepMap_18Q1_maf_20180207.txt") %>%
@@ -127,7 +139,7 @@ ccle_mut  <- fread("CCLE_DepMap_18Q1_maf_20180207.txt") %>%
 brca_ccle_mut <- ccle_mut[cell_line %in% unique(ccle[CCLE_tumor_type == "breast"])]
 ```
 
-Now we are ready to uncover consensus SLPs, which are 1) hits in genetic screens, 2) consistent for same mutations among cell lines. `scr_slp` and `cons_slp` are used for these two steps, respectively.
+Now we are ready to uncover the consensus SLPs, which are 1) hits in genetic screens, 2) consistent for the same mutations among cell lines evaluated by Cohen's  kappa coefficient. `scr_slp` and `cons_slp` are used for these two steps, respectively.
 
 ```{r}
 plan(multisession, workers = 2)
@@ -137,7 +149,7 @@ res_comp   <- readRDS("compSLP_res.rds")
 res_corr   <- readRDS("corrSLP_res.rds")
 merged_res <- merge_slp(res_comp, res_corr)
 
-#- Toy hits data. 
+#- Toy hits data.
 screen_1 <- merged_res[, .(slp_entrez, slp_symbol)] %>%
     unique %>%
     .[sample(nrow(.), round(.8 * nrow(.)))] %>%
@@ -152,7 +164,7 @@ screen_2 <- merged_res[, .(slp_entrez, slp_symbol)] %>%
 
 screen_hit <- rbind(screen_1, screen_2)
 
-#- Toy mutations data.
+#- Toy mutation data.
 mut_1 <- merged_res[, .(mut_entrez)] %>%
     unique %>%
     .[sample(nrow(.), round(.8 * nrow(.)))] %>%
@@ -174,19 +186,23 @@ k_res   <- cons_slp(scr_res, merged_res)
 #- Filter results, e.g., by kappa_value and padj.
 k_res_f <- k_res[kappa_value >= 0.6 & padj <= 0.1]
 
-sessionInfo()
 plan(sequential)
+
+sessionInfo()
 ```
 
-## Reference
-[1]: Cerami, E. et al. The cBio Cancer Genomics Portal: An Open Platform for Exploring Multidimensional Cancer Genomics Data. Cancer Discovery 2, 401–404 (2012).
+# Reference
 
-[2]: Breitling, R., Armengaud, P., Amtmann, A. & Herzyk, P. Rank products: a simple, yet powerful, new method to detect differentially regulated genes in replicated microarray experiments. FEBS Letters 573, 83–92 (2004).
+[1]: Shao C. mslp: a comprehensive pipeline in predicting cancer mutations specific synthetic lethal partners. 2021.
 
-[3]: Huynh-Thu, V. A., Irrthum, A., Wehenkel, L. & Geurts, P. Inferring Regulatory Networks from Expression Data Using Tree-Based Methods. PLoS ONE 5, e12776 (2010).
+[2]: Cerami, E. et al. The cBio Cancer Genomics Portal: An Open Platform for Exploring Multidimensional Cancer Genomics Data. Cancer Discovery 2, 401–404 (2012).
 
-[4]: Barretina, J. et al. The Cancer Cell Line Encyclopedia enables predictive modelling of anticancer drug sensitivity. Nature 483, 603 (2012).
+[3]: Breitling, R., Armengaud, P., Amtmann, A. & Herzyk, P. Rank products: a simple, yet powerful, new method to detect differentially regulated genes in replicated microarray experiments. FEBS Letters 573, 83–92 (2004).
 
-[5]: McDonald, E. R. et al. Project DRIVE: A Compendium of Cancer Dependencies and Synthetic Lethal Relationships Uncovered by Large-Scale, Deep RNAi Screening. Cell 170, 577-592.e10 (2017).
+[4]: Huynh-Thu, V. A., Irrthum, A., Wehenkel, L. & Geurts, P. Inferring Regulatory Networks from Expression Data Using Tree-Based Methods. PLoS ONE 5, e12776 (2010).
 
-[6]: Tsherniak, A. et al. Defining a Cancer Dependency Map. Cell 170, 564-576.e16 (2017).
+[5]: Barretina, J. et al. The Cancer Cell Line Encyclopedia enables predictive modeling of anticancer drug sensitivity. Nature 483, 603 (2012).
+
+[6]: McDonald, E. R. et al. Project DRIVE: A Compendium of Cancer Dependencies and Synthetic Lethal Relationships Uncovered by Large-Scale, Deep RNAi Screening. Cell 170, 577-592.e10 (2017).
+
+[7]: Tsherniak, A. et al. Defining a Cancer Dependency Map. Cell 170, 564-576.e16 (2017).
