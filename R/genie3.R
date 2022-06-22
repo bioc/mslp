@@ -60,15 +60,12 @@ genie3 <- function(expr.matrix,
       # for security, abort if some input gene name is not in gene names
       missing.gene.names <- setdiff(input.gene.names, gene.names)
       if (length(missing.gene.names) != 0) {
-        for (missing.gene.name in missing.gene.names) {
-          message("Gene ", missing.gene.name, " was not in the expression matrix\n")
-        }
+        lapply(missing.gene.names, function(x) message("Gene ", x, " was not in the expression matrix\n"))
         stop("Aborting computation")
       }
     }
   }
 
-  # if (methods::is(K, "numeric")) {
   if (is.numeric(K)) {
     mtry <- K
   } else if (K == "sqrt") {
