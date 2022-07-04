@@ -24,8 +24,8 @@
 #' require(doFuture)
 #' plan(multisession, workers = 2)
 #' data("example_z")
-#' data("comp_mut")
-#' res <- comp_slp(example_z, comp_mut)
+#' data("example_comp_mut")
+#' res <- comp_slp(example_z, example_comp_mut)
 #' plan(sequential)
 #' @export
 comp_slp <- function(zscore_data,

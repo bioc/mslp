@@ -39,9 +39,9 @@ require(future)
 require(doFuture)
 plan(multisession, workers = 2)
 library(magrittr)
-data(compSLP)
-data(corrSLP)
-merged_res <- merge_slp(compSLP, corrSLP)
+data(example_compSLP)
+data(example_corrSLP)
+merged_res <- merge_slp(example_compSLP, example_corrSLP)
 
 #- Toy hits data.
 screen_1 <- merged_res[, .(slp_entrez, slp_symbol)] \%>\%

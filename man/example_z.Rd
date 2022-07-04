@@ -8,7 +8,7 @@
 A matrix.
 }
 \usage{
-example_z
+data(example_z)
 }
 \description{
 Z score matrix, genes by samples.

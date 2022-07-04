@@ -29,10 +29,10 @@ require(future)
 require(doFuture)
 plan(multisession, workers = 2)
 data(example_expr)
-data(corr_mut)
-mutgene    <- sample(intersect(corr_mut$mut_entrez, rownames(example_expr)), 2)
+data(example_corr_mut)
+mutgene    <- sample(intersect(example_corr_mut$mut_entrez, rownames(example_expr)), 2)
 nperm      <- 5
-res        <- lapply(seq_len(nperm), function(x) corr_slp(example_expr, corr_mut, mutgene = mutgene))
+res        <- lapply(seq_len(nperm), function(x) corr_slp(example_expr, example_corr_mut, mutgene = mutgene))
 roc_thresh <- est_im(res)
 plan(sequential)
 }

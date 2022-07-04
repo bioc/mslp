@@ -127,12 +127,12 @@ pp_tcga <- function(p_mut,
 #' }
 #' @examples
 #' data("example_z")
-#' data("comp_mut")
-#' comp_res <- comp_slp(example_z, comp_mut)
+#' data("example_comp_mut")
+#' comp_res <- comp_slp(example_z, example_comp_mut)
 #'
 #' data("example_expr")
-#' data("corr_mut")
-#' corr_res <- corr_slp(example_expr, corr_mut)
+#' data("example_corr_mut")
+#' corr_res <- corr_slp(example_expr, example_corr_mut)
 #'
 #' res <- merge_slp(comp_res, corr_res)
 #' @export
@@ -179,10 +179,10 @@ merge_slp <- function(comp_data, corr_data) {
 #' require(doFuture)
 #' plan(multisession, workers = 2)
 #' data(example_expr)
-#' data(corr_mut)
-#' mutgene    <- sample(intersect(corr_mut$mut_entrez, rownames(example_expr)), 2)
+#' data(example_corr_mut)
+#' mutgene    <- sample(intersect(example_corr_mut$mut_entrez, rownames(example_expr)), 2)
 #' nperm      <- 5
-#' res        <- lapply(seq_len(nperm), function(x) corr_slp(example_expr, corr_mut, mutgene = mutgene))
+#' res        <- lapply(seq_len(nperm), function(x) corr_slp(example_expr, example_corr_mut, mutgene = mutgene))
 #' roc_thresh <- est_im(res)
 #' plan(sequential)
 #' @export

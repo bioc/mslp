@@ -8,7 +8,7 @@
 A matrix.
 }
 \usage{
-example_expr
+data(example_expr)
 }
 \description{
 Expresion matrix, genes by samples.

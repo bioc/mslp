@@ -24,8 +24,8 @@
 #' require(doFuture)
 #' plan(multisession, workers = 2)
 #' data("example_expr")
-#' data("corr_mut")
-#' res <- corr_slp(example_expr, corr_mut)
+#' data("example_corr_mut")
+#' res <- corr_slp(example_expr, example_corr_mut)
 #' plan(sequential)
 #' @export
 corr_slp <- function(expr_data, mut_data, mutgene = NULL, im_thresh = 0.001, topgene = 2000, ...) {

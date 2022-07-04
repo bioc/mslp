@@ -66,9 +66,9 @@ require(doFuture)
 library(magrittr)
 library(mslp)
 #- mutation from TCGA datasets to computate SLP via comp_slp
-data(comp_mut)
+data(example_comp_mut)
 #- mutation from TCGA datasets to computate SLP via corr_slp.
-data(corr_mut)
+data(example_corr_mut)
 data(example_expr)
 data(example_z)
 ```
@@ -79,7 +79,7 @@ We use `comp_slp` to predict SLPs compensated for loss of functions due to mutat
 
 ```{r}
 plan(multisession, workers = 2)
-res_comp <- comp_slp(example_z, comp_mut)
+res_comp <- comp_slp(example_z, example_comp_mut)
 saveRDS(res_comp, file = "compSLP_res.rds")
 plan(sequential)
 ```
@@ -89,7 +89,7 @@ We use `corr_slp` to predict SLPs correlated with mutations in wide type patient
 
 ```{r}
 plan(multisession, workers = 2)
-res_corr <- corr_slp(example_expr, corr_mut)
+res_corr <- corr_slp(example_expr, example_corr_mut)
 saveRDS(res_corr, "corrSLP_res.rds")
 
 #- Filter res by importance threshold to reduce false positives.
@@ -103,9 +103,9 @@ It is recommended to compute the `im_thresh` for each cancer type separately. We
 ```{r}
 plan(multisession, workers = 2)
 #- Random mutations and runs
-mutgene    <- sample(intersect(corr_mut$mut_entrez, rownames(example_expr)), 5)
+mutgene    <- sample(intersect(example_corr_mut$mut_entrez, rownames(example_expr)), 5)
 nperm      <- 3
-res_random <- lapply(seq_len(nperm), function(x) corr_slp(example_expr, corr_mut, mutgene = mutgene))
+res_random <- lapply(seq_len(nperm), function(x) corr_slp(example_expr, example_corr_mut, mutgene = mutgene))
 im_res     <- est_im(res_random)
 res_f_2    <- res_corr[im >= mean(im_res$roc_thresh)]
 plan(sequential)
