@@ -85,7 +85,7 @@ plan(sequential)
 ```
 
 ## Call SLPs from correlationModule
-We use `corr_slp` to predict SLPs correlated with mutations in wide type patients. Internally, GENIE3 is used to select potential SLPs [3]. The im_thresh of 0.0016 was a rather robust threshold identified from various TCGA datasets with 100 random selected mutations and 50 repetitions.
+We use `corr_slp` to predict SLPs correlated with mutations in wide type patients. Internally, GENIE3 is used to select potential SLPs [4]. The im_thresh of 0.0016 was a rather robust threshold identified from various TCGA datasets with 100 random selected mutations and 50 repetitions.
 
 ```{r}
 plan(multisession, workers = 2)
