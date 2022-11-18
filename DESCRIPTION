@@ -2,7 +2,7 @@ Package: mslp
 Type: Package
 Title: Predict synthetic lethal partners of tumour mutations
 Version: 1.0.0
-Authors@R: person(given = "Chunxuan", family = "Shao", role = c("aut", "cre"), email = "c.shao@dkfz-heidelberg.de")
+Authors@R: person(given = "Chunxuan", family = "Shao", role = c("aut", "cre"), email = "chunxuan@outlook.com")
 Description: An integrated pipeline to predict the potential synthetic lethality partners (SLPs) of tumour mutations, 
    based on gene expression, mutation profiling and cell line genetic screens data. It has builtd-in support for data from cBioPortal.
    The primary SLPs correlating with muations in WT and compensating for the loss of function of mutations are predicted by random forest based 
