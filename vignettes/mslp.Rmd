@@ -30,6 +30,7 @@ Install the package from Bioconductor.
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 BiocManager::install("mslp")
+BiocManager::install("data.table")
 ```
 
 # Analysis
@@ -65,6 +66,8 @@ require(future)
 require(doFuture)
 library(magrittr)
 library(mslp)
+library(data.table)
+
 #- mutation from TCGA datasets to computate SLP via comp_slp
 data(example_comp_mut)
 #- mutation from TCGA datasets to computate SLP via corr_slp.

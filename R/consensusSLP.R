@@ -25,6 +25,7 @@
 #' require(doFuture)
 #' plan(multisession, workers = 2)
 #' library(magrittr)
+#' library(data.table)
 #' data(example_compSLP)
 #' data(example_corrSLP)
 #' merged_res <- merge_slp(example_compSLP, example_corrSLP)
