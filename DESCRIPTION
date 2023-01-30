@@ -10,7 +10,7 @@ Description: An integrated pipeline to predict the potential synthetic lethality
 License: GPL-3
 Encoding: UTF-8
 LazyData: false
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.3
 Depends: R (>= 4.2.0)
 Imports:
     data.table (>= 1.13.0),
